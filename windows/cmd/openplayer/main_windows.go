@@ -438,6 +438,7 @@ func main() {
 	} else {
 		restoreSession()
 	}
+	noteUpdated()
 	maybeAutoUpdate()
 	maybeCheckAppVersion()
 	scheduleDefaultQuestion()

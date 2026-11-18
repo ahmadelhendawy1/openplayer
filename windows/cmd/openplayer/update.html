@@ -78,11 +78,12 @@ const T = (s) => (L.t && L.t[s]) || s;
 function render() {
   if (!D) return;
   document.documentElement.dir = L.dir || "ltr"; document.documentElement.lang = L.lang || "en";
-  document.body.classList.toggle("uptodate", !D.newer);
-  $("title").textContent = D.newer ? T("A new version of OpenPlayer is ready") : T("OpenPlayer is up to date");
+  const wn = !!D.whatsnew;
+  document.body.classList.toggle("uptodate", !D.newer && !wn);
+  $("title").textContent = wn ? T("What's new in OpenPlayer") : D.newer ? T("A new version of OpenPlayer is ready") : T("OpenPlayer is up to date");
   $("ver").innerHTML = D.newer ? `<span>${esc(D.current)}</span><span>→</span><b>${esc(D.version)}</b>` : `<b>${esc(D.current)}</b>`;
   const meta = [];
-  if (D.newer && D.date) meta.push(T("Released") + " " + D.date);
+  if ((D.newer || wn) && D.date) meta.push(T("Released") + " " + D.date);
   if (D.newer && D.size) meta.push(D.size + " " + T("MB"));
   $("meta").textContent = meta.join(" · ");
   $("newH").textContent = T("What's new");
@@ -90,7 +91,8 @@ function render() {
   $("upd").textContent = D.canSelf ? T("Update now") : T("Open the download page");
   $("later").textContent = D.newer ? T("Later") : T("Close");
   $("page").textContent = T("Download page");
-  $("page").classList.toggle("hidden", !D.canSelf);
+  $("page").classList.toggle("hidden", !D.canSelf || wn);
+  $("upd").classList.toggle("hidden", wn);
 }
 window.OP = {
   i18n(o) { L = o; render(); },

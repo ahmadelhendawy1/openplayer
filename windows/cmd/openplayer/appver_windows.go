@@ -45,6 +45,8 @@ var (
 	updChecking bool
 	// updShownThisRun: a forced update has been offered since this start.
 	updShownThisRun bool
+	// updWhatsNew: the window shows this version's notes (Help > What's New).
+	updWhatsNew bool
 
 	updWin = &webWin{name: "update", title: "OpenPlayer update", w: 560, h: 500, frame: true, minW: 460, minH: 380,
 		page: func() string { return updateHTML }}
@@ -149,8 +151,30 @@ func (e errStatus) Error() string { return string(e) }
 
 // showNewVersion runs on the window thread.
 func showNewVersion() {
+	updMu.Lock()
+	updWhatsNew = false
+	updMu.Unlock()
 	updWin.show()
 	pushUpdate()
+}
+
+// showWhatsNew runs on the window thread (Help > What's New).
+func showWhatsNew() {
+	updMu.Lock()
+	updWhatsNew = true
+	updMu.Unlock()
+	updWin.show()
+	pushUpdate()
+}
+
+// noteUpdated runs at start-up: after an update, say so once on screen.
+func noteUpdated() {
+	last := cfg.get("last_run_version", "")
+	_ = cfg.set("last_run_version", appVersion)
+	if last != "" && last != appVersion {
+		logf("updated from %s to %s", last, appVersion)
+		mpv.Async(mp, "show-text", Tf("OpenPlayer was updated to %s. See what's new: Help › What's New", appVersion), "7000")
+	}
 }
 
 func pushUpdate() {
@@ -158,8 +182,18 @@ func pushUpdate() {
 		return
 	}
 	updMu.Lock()
-	l, have := updLatest, updHave
+	l, have, wn := updLatest, updHave, updWhatsNew
 	updMu.Unlock()
+	if wn {
+		notes := whatsNewEN
+		if uiLang == "ar" {
+			notes = whatsNewAR
+		}
+		b, _ := json.Marshal(map[string]any{"whatsnew": true, "newer": false, "current": appVersion, "version": appVersion,
+			"date": humanDate(whatsNewDate), "notes": notesList(notes)})
+		updWin.eval("OP.data(" + string(b) + ")")
+		return
+	}
 	if !have {
 		return
 	}
@@ -167,14 +201,7 @@ func pushUpdate() {
 	if uiLang == "ar" && l.NotesAR != "" {
 		notes = l.NotesAR
 	}
-	date := l.Date
-	if t, err := time.Parse("2006-01-02", l.Date); err == nil {
-		date = t.Format("2 January 2006")
-		if uiLang == "ar" {
-			months := []string{"يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"}
-			date = fmt.Sprintf("%d %s %d", t.Day(), months[t.Month()-1], t.Year())
-		}
-	}
+	date := humanDate(l.Date)
 	size := ""
 	if l.SizeMB > 0 {
 		size = strconv.FormatFloat(l.SizeMB, 'f', 1, 64)
@@ -182,6 +209,18 @@ func pushUpdate() {
 	b, _ := json.Marshal(map[string]any{"newer": isNewer(l.Version, appVersion), "current": appVersion, "version": l.Version,
 		"date": date, "size": size, "notes": notesList(notes), "canSelf": l.canSelfUpdate()})
 	updWin.eval("OP.data(" + string(b) + ")")
+}
+
+func humanDate(d string) string {
+	t, err := time.Parse("2006-01-02", d)
+	if err != nil {
+		return d
+	}
+	if uiLang == "ar" {
+		months := []string{"يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"}
+		return fmt.Sprintf("%d %s %d", t.Day(), months[t.Month()-1], t.Year())
+	}
+	return t.Format("2 January 2006")
 }
 
 func updateMessage(a string, _ json.RawMessage) {

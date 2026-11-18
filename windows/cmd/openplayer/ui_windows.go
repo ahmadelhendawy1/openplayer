@@ -95,6 +95,9 @@ const (
 	idmOptions
 	idmLangEn
 	idmLangAr
+	idmWhatsNew
+	idmWebsite
+	idmSupport
 	idmFirstMpv = 1000 // ids >= this map to mpvMenu entries
 )
 
@@ -283,6 +286,12 @@ func toolsMenu() uintptr {
 
 func helpMenu() uintptr {
 	m := newPopup()
+	addItem(m, idmWhatsNew, "&What's New in OpenPlayer...")
+	addItem(m, idmCheckUpdates, "Check for &Updates...")
+	addSep(m)
+	addItem(m, idmWebsite, "OpenPlayer &Website (ai4edutech.com)")
+	addItem(m, idmSupport, "Email &Support...")
+	addSep(m)
 	addItem(m, idmAbout, "&About OpenPlayer")
 	return m
 }
@@ -410,7 +419,18 @@ func handleCommand(id int) {
 			uintptr(unsafe.Pointer(utf16z(filepath.Join(appRoot, "config")))), 0, 0, 1)
 	case id == idmAbout:
 		messageInfo(T("About OpenPlayer"), "OpenPlayer "+appVersion+"\n\n"+T("A fast, clean, open-source media player.")+"\n"+
-			T("Engine: libmpv (LGPL build) with FFmpeg.")+"\n"+T("On-screen controls: uosc (LGPL-2.1).")+"\n\n"+T("No ads, no tracking, no bundled software."))
+			T("No ads, no tracking, no bundled software.")+"\n\n"+
+			T("Made by Ahmad Elhendawy · AI4EduTech")+"\n"+
+			T("Website:")+" "+websiteURL+"\n"+
+			T("Support:")+" "+supportEmail+"\n"+
+			T("Source code (GPL-3.0):")+" github.com/ahmadelhendawy1/openplayer\n\n"+
+			T("Engine: libmpv (LGPL build) with FFmpeg.")+"\n"+T("On-screen controls: uosc (LGPL-2.1)."))
+	case id == idmWhatsNew:
+		showWhatsNew()
+	case id == idmWebsite:
+		openPath(websiteURL)
+	case id == idmSupport:
+		openPath("mailto:" + supportEmail + "?subject=" + strings.ReplaceAll("OpenPlayer "+appVersion+" support", " ", "%20"))
 	case id >= idmFirstMpv && id-idmFirstMpv < len(mpvMenu):
 		mpv.Async(mp, mpvMenu[id-idmFirstMpv]...)
 	}

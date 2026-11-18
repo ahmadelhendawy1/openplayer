@@ -19,6 +19,10 @@ cp "$ENGINE_DLL" "$STAGE/engine/libmpv-2.dll"
 # On-screen controls live with the engine so the updater can refresh them;
 # the fonts are also copied to config\fonts as a fallback for older engines.
 cp -r "$UOSC/src/uosc" "$STAGE/engine/skin/uosc"
+# OpenPlayer changes to uosc (time display), kept as patches so uosc can be updated
+for p in "$ROOT"/third_party/uosc-patches/*.patch; do
+  ( cd "$STAGE/engine/skin" && patch -s -p2 < "$p" ) || { echo "uosc patch failed: $p"; exit 1; }
+done
 cp "$UOSC"/src/fonts/* "$STAGE/engine/skin/fonts/"
 cp "$UOSC"/src/fonts/* "$STAGE/config/fonts/"
 cp "$ROOT/config/input.conf" "$ROOT/config/openplayer-text.json" "$ROOT/config/uosc-ar.json" "$STAGE/config/"

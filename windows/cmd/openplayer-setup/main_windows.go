@@ -291,6 +291,10 @@ func install(o options) error {
 			return fmt.Errorf("could not replace %s (is OpenPlayer still open?): %w", d, err)
 		}
 	}
+	// Early versions put the on-screen controls in config\scripts\uosc. They
+	// now live in engine\skin\uosc; an old copy left behind would be loaded
+	// as well and draw a second, outdated set of controls on top.
+	_ = os.RemoveAll(filepath.Join(o.Dir, "config", "scripts", "uosc"))
 	report(progress{Percent: 3, DoneStep: "Prepared installation folder"})
 
 	zr, err := zip.NewReader(bytes.NewReader(payload), int64(len(payload)))

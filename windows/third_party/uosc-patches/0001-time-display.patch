@@ -1,0 +1,36 @@
+diff -ru a/src/uosc/lib/utils.lua b/src/uosc/lib/utils.lua
+--- a/src/uosc/lib/utils.lua	2026-11-18 10:41:30.239723541 +0200
++++ b/src/uosc/lib/utils.lua	2026-11-18 10:41:30.294785855 +0200
+@@ -300,7 +300,8 @@
+ 		human = human .. '.' .. string.format('%0' .. options.time_precision .. 'd', frac)
+ 	end
+ 	if max_seconds then
+-		local trim_length = (max_seconds < 60 and 7 or (max_seconds < 3600 and 4 or 0))
++		-- OpenPlayer: always at least MM:SS (never a bare "42" for short videos)
++		local trim_length = (max_seconds < 3600 and 4 or 0)
+ 		if trim_length > 0 then
+ 			local has_minus = seconds < 0
+ 			human = string.sub(human, trim_length + (has_minus and 1 or 0))
+diff -ru a/src/uosc/main.lua b/src/uosc/main.lua
+--- a/src/uosc/main.lua	2026-11-18 10:41:30.239742178 +0200
++++ b/src/uosc/main.lua	2026-11-18 10:41:30.294604920 +0200
+@@ -123,7 +123,7 @@
+ if options.total_time and options.destination_time == 'playtime-remaining' then
+ 	msg.warn('`total_time` is deprecated. Use `destination_time` instead.')
+ 	options.destination_time = 'total'
+-elseif not itable_index_of({'total', 'playtime-remaining', 'time-remaining'}, options.destination_time) then
++elseif not itable_index_of({'total', 'playtime-remaining', 'time-remaining', 'remaining-total'}, options.destination_time) then
+ 	options.destination_time = 'playtime-remaining'
+ end
+ if not itable_index_of({'left', 'right'}, options.top_bar_controls) then
+@@ -488,6 +488,10 @@
+ 				state.destination_time_human = format_time((state.time - state.duration) / state.speed, state.duration)
+ 			elseif options.destination_time == 'total' then
+ 				state.destination_time_human = format_time(state.duration, state.duration)
++			elseif options.destination_time == 'remaining-total' then
++				-- OpenPlayer: time left (counting down) / total length, e.g. "-00:19 / 00:42"
++				state.destination_time_human = format_time((state.time - state.duration) / state.speed, state.duration)
++					.. ' / ' .. format_time(state.duration, state.duration)
+ 			else
+ 				state.destination_time_human = format_time(state.time - state.duration, state.duration)
+ 			end

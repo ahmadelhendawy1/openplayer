@@ -17,6 +17,7 @@ type mpvLib struct {
 	create, setOptionString, initialize, command *syscall.Proc
 	commandAsync, observeProperty                *syscall.Proc
 	terminateDestroy, waitEvent, errorString     *syscall.Proc
+	getPropertyString, free                      *syscall.Proc
 }
 
 // libmpv event ids and formats used here.
@@ -48,6 +49,7 @@ func loadMPV(path string) (*mpvLib, error) {
 		"mpv_command_async": &l.commandAsync, "mpv_observe_property": &l.observeProperty,
 		"mpv_terminate_destroy": &l.terminateDestroy, "mpv_wait_event": &l.waitEvent,
 		"mpv_error_string": &l.errorString,
+		"mpv_get_property_string": &l.getPropertyString, "mpv_free": &l.free,
 	} {
 		if *dst, err = d.FindProc(name); err != nil {
 			return nil, fmt.Errorf("%s is not a libmpv build (%w)", path, err)
@@ -111,6 +113,22 @@ func (l *mpvLib) Command(h mpvHandle, args ...string) error {
 		return fmt.Errorf("command %v: %w", args, e)
 	}
 	return nil
+}
+
+// GetString reads a property as text ("" when it is not available). Like
+// Command, do not call it from the window thread.
+func (l *mpvLib) GetString(h mpvHandle, name string) string {
+	n, err := syscall.BytePtrFromString(name)
+	if err != nil {
+		return ""
+	}
+	r, _, _ := l.getPropertyString.Call(uintptr(h), uintptr(unsafe.Pointer(n)))
+	if r == 0 {
+		return ""
+	}
+	s := cstr(r)
+	l.free.Call(r)
+	return s
 }
 
 // Async queues a command and returns immediately (safe from any thread).

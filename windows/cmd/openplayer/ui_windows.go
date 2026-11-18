@@ -419,6 +419,7 @@ func handleCommand(id int) {
 // openFiles plays files (replacing the playlist) or appends them.
 // Subtitle files are attached to the current video instead.
 func openFiles(files []string, enqueue bool) {
+	cancelRestore()
 	subs := map[string]bool{}
 	for _, e := range extensionLists()["subtitle"] {
 		subs["."+e] = true

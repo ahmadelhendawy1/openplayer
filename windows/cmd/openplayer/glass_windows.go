@@ -62,7 +62,7 @@ func updateGlass() {
 		return
 	}
 	stateMu.Lock()
-	dimsJS, paused, idle := mpvState["osd-dimensions"], mpvState["pause"] == "yes", mpvState["idle-active"] == "yes"
+	dimsJS, idle := mpvState["osd-dimensions"], mpvState["idle-active"] == "yes"
 	stateMu.Unlock()
 	d, ok := parseOsdDims(dimsJS)
 	scale := float64(scalePx(1000)) / 1000
@@ -70,14 +70,14 @@ func updateGlass() {
 		scale *= 1.25 // uosc scale_fullscreen
 	}
 	// In a window the controls are always shown. In fullscreen uosc reveals
-	// them only when the mouse comes near the bottom (or while paused), so the
+	// them only when the mouse comes near the bottom (also while paused), so the
 	// glass follows the same rule instead of lingering as an empty bar.
 	nearBottom := false
 	if ok && mouseInside && !cursorHidden {
 		_, plateTop, _, _, _ := glassPlate(d.W, d.H, scale)
 		nearBottom = float64(lastMouse[1]) >= plateTop-60*scale
 	}
-	on := ok && !idle && (!fsActive || paused || nearBottom)
+	on := ok && !idle && (!fsActive || nearBottom) // paused too: hides with the controls
 	opts := "glass_on=0"
 	if on {
 		px0, py0, px1, py1, r := glassPlate(d.W, d.H, scale)

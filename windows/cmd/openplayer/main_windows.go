@@ -20,7 +20,7 @@ import (
 	"unsafe"
 )
 
-const appVersion = "0.9.7"
+const appVersion = "0.9.9"
 
 // Set at build time: -ldflags "-X main.pubKey=<base64 ed25519 public key>"
 var pubKey string
@@ -187,6 +187,7 @@ func wndProc(hwnd, m, wp, lp uintptr) uintptr {
 		return 0
 	case wmAppPanels:
 		panelsRefresh()
+		pauseChanged()
 		updateGlass()
 		updateIdle()
 		return 0
@@ -427,13 +428,15 @@ func main() {
 	refreshAllChecks()
 	_ = mpv.Observe(mp, "fullscreen", fmtFlag)
 	_ = mpv.Observe(mp, "media-title", fmtString)
-	for _, prop := range []string{"playlist", "track-list", "chapter-list", "chapter", "speed", "idle-active", "osd-dimensions", "pause", "audio-device-list"} {
+	for _, prop := range []string{"playlist", "track-list", "chapter-list", "chapter", "speed", "idle-active", "osd-dimensions", "pause", "audio-device-list", "eof-reached"} {
 		_ = mpv.Observe(mp, prop, fmtString) // node properties arrive as JSON text
 	}
 
 	if len(files) > 0 {
 		openFiles(files, false)
 		lastOpen = time.Now()
+	} else {
+		restoreSession()
 	}
 	maybeAutoUpdate()
 	maybeCheckAppVersion()
@@ -463,9 +466,14 @@ func main() {
 					}
 				case "media-title":
 					queueTitle(propString(val))
-				case "playlist", "track-list", "chapter-list", "chapter", "speed", "idle-active", "osd-dimensions", "pause", "audio-device-list":
+				case "playlist", "track-list", "chapter-list", "chapter", "speed", "idle-active", "osd-dimensions", "pause", "audio-device-list", "eof-reached":
 					storeProp(name, propString(val))
+					if name == "eof-reached" {
+						onEOFReached(propString(val))
+					}
 				}
+			case 8: // MPV_EVENT_FILE_LOADED
+				onFileLoaded()
 			case 7: // MPV_EVENT_END_FILE: log files that fail to play
 				if ev.Data != 0 {
 					d := ptrAt(ev.Data) // mpv_event_end_file: int reason; int error; ...
@@ -514,7 +522,8 @@ func main() {
 		pTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
 		pDispatchMessageW.Call(uintptr(unsafe.Pointer(&m)))
 	}
+	saveSession()
 	closing.Store(true)
 	<-done
-	mpv.Destroy(mp)
+	mpv.Destroy(mp) // also saves the position of the playing file (save-position-on-quit)
 }

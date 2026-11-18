@@ -57,8 +57,10 @@ func optionSections() []optSection {
 		}},
 		{ID: "playback", Label: "Playback", Icon: "play", Items: []optDef{
 			{Key: "mpv:save-position-on-quit", Label: "Resume where I left off", Kind: "toggle", Def: "yes"},
+			{Key: "app:resume_rewind", Label: "When resuming, go back (seconds)", Kind: "number", Min: 0, Max: 60, Step: 1, Def: "5", Help: "Replays the last few seconds so you remember where you were. 0 = start exactly where you stopped."},
+			{Key: "app:restore_session", Label: "Reopen the last video when OpenPlayer starts", Kind: "toggle", Def: "yes", Help: "It opens paused at the moment you stopped. Click the video or press Play to continue."},
 			{Key: "mpv:autocreate-playlist", Label: "Add the other files of the folder to the playlist", Kind: "choice", Choices: ch("no", "Off", "filter", "Same type of media", "same", "All media"), Def: "no"},
-			{Key: "mpv:keep-open", Label: "At the end of the playlist", Kind: "choice", Choices: ch("yes", "Stay on the last frame", "no", "Go back to the start screen"), Def: "yes"},
+			{Key: "mpv:keep-open", Label: "At the end of the playlist", Kind: "choice", Choices: ch("yes", "Stop and go back to the beginning", "no", "Go back to the start screen"), Def: "yes"},
 			{Key: "mpv:loop-playlist", Label: "Repeat the playlist", Kind: "choice", Choices: ch("no", "Off", "inf", "On"), Def: "no"},
 			{Key: "mpv:hr-seek", Label: "Precise seeking", Kind: "choice", Choices: ch("default", "Automatic", "yes", "Always", "no", "Off (faster)"), Def: "default"},
 			{Key: "mpv:speed", Label: "Default speed", Kind: "choice", Choices: ch("0.75", "0.75×", "1", "1× (normal)", "1.25", "1.25×", "1.5", "1.5×"), Def: "1"},

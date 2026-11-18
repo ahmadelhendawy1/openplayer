@@ -240,7 +240,7 @@ func optAction(name string) {
 				}
 			}
 		}
-		for _, k := range []string{"ui_scale", "hide_ms", "smooth", "single_instance"} {
+		for _, k := range []string{"ui_scale", "hide_ms", "smooth", "single_instance", "resume_rewind", "restore_session"} {
 			_ = cfg.del(k)
 		}
 		applyUIScale()

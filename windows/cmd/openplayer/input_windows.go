@@ -38,7 +38,10 @@ const (
 )
 
 // cursorHideMs: fullscreen controls and cursor hide after this (Options).
+// While paused they stay a little longer (pausedHideMs) and then hide too.
 var cursorHideMs uintptr = 1500
+
+const pausedHideMs = 3000
 
 var (
 	pSetCapture     = user32.NewProc("SetCapture")
@@ -52,6 +55,9 @@ var (
 	mouseInside  bool
 	suppressChar bool
 	cursorHidden bool
+	// uiAway: we told mpv the mouse left so uosc hides its controls; the
+	// next real mouse move brings them back.
+	uiAway bool
 	lastMouse    = [2]int32{-1, -1}
 )
 
@@ -105,9 +111,34 @@ func showCursor() {
 		pSetCursor.Call(arrowCursor)
 		updateGlass() // controls come back in fullscreen
 	}
+	restartHideTimer()
+}
+
+// restartHideTimer starts the fullscreen auto-hide countdown again.
+func restartHideTimer() {
 	pKillTimer.Call(mainWnd, cursorTimer)
 	if fsActive {
-		pSetTimer.Call(mainWnd, cursorTimer, cursorHideMs, 0)
+		ms := cursorHideMs
+		stateMu.Lock()
+		paused := mpvState["pause"] == "yes"
+		stateMu.Unlock()
+		if paused {
+			ms = max(ms, pausedHideMs)
+		}
+		pSetTimer.Call(mainWnd, cursorTimer, ms, 0)
+	}
+}
+
+// pauseChanged runs on the window thread when mpv's pause state changes.
+var lastPaused string
+
+func pauseChanged() {
+	stateMu.Lock()
+	p := mpvState["pause"]
+	stateMu.Unlock()
+	if p != lastPaused {
+		lastPaused = p
+		restartHideTimer()
 	}
 }
 
@@ -128,6 +159,10 @@ func handleInput(hwnd, m, wp, lp uintptr) (uintptr, bool) {
 		}
 		if x != lastMouse[0] || y != lastMouse[1] { // Windows sends spurious repeats
 			lastMouse = [2]int32{x, y}
+			if uiAway {
+				uiAway = false
+				mpv.Async(mp, "keypress", "MOUSE_ENTER")
+			}
 			sendMouse(x, y)
 			showCursor()
 			if fsActive {
@@ -223,6 +258,10 @@ func handleInput(hwnd, m, wp, lp uintptr) (uintptr, bool) {
 			if fsActive {
 				cursorHidden = true
 				pSetCursor.Call(0)
+				if mouseInside && !uiAway {
+					uiAway = true // uosc hides its controls even if the mouse rests on them
+					mpv.Async(mp, "keypress", "MOUSE_LEAVE")
+				}
 				updateGlass() // controls hide in fullscreen
 			}
 			return 0, true

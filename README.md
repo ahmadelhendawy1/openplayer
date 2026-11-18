@@ -12,6 +12,8 @@ interface, 11 themes and a full Arabic interface, with no ads, no tracking and n
 - Volume normalize and an amplifier up to 500 %
 - Subtitles, audio tracks, playback speed and A-B repeat (plus a sleep timer on Android)
 - One click on the video pauses or plays; a double-click enters or leaves full screen
+- Remembers where you stopped: reopens your last video paused at that moment, going back 5 seconds so you remember what was happening
+- Time display shows time played, time left and total length (for example `00:23` … `-00:19 / 00:42`)
 - English and Arabic (right-to-left) interface
 - Built-in update check that shows what's new; the download is verified with SHA-256 before it installs
 

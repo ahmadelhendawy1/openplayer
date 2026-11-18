@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+:root { --canvas:#0e0b07; --surface:#120d07; --text:#f6ead4; --muted:#bfae8e; --accent:#f5b942; --on-accent:#1a1206; --match:#ffcf6b; --border:#5a4318;
+  --font:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--font); color: var(--text); overflow: hidden; user-select: none; -webkit-user-select: none;
+  background:
+    radial-gradient(90% 40% at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+    radial-gradient(80% 35% at 0% 100%, color-mix(in srgb, var(--match) 14%, transparent), transparent 70%),
+    var(--canvas); }
+#art { position: fixed; inset: 0; opacity: .55; }
+#art svg { width: 100%; height: 100%; display: block; }
+#art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--canvas) 35%, transparent), color-mix(in srgb, var(--canvas) 70%, transparent)); }
+.wrap { position: relative; height: 100%; display: flex; flex-direction: column; padding: 18px 14px 14px; gap: 12px;
+  border-left: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+body.left .wrap { border-left: 0; border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+.head { display: flex; align-items: baseline; gap: 10px; padding: 0 6px; }
+.head h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -.2px; }
+.head .count { color: var(--muted); font-size: 13px; }
+.head .tools { margin-left: auto; display: flex; gap: 2px; align-self: center; }
+.head .tools.hidden { display: none; }
+.head .tools:not(.hidden) + .x { margin-left: 2px; }
+.head .x { margin-left: auto; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; color: var(--muted); align-self: center; }
+.head .x:hover { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); }
+.scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 2px 4px 8px; display: flex; flex-direction: column; gap: 9px; }
+.glass { background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 9%, transparent), 0 10px 26px rgba(0,0,0,.22);
+  backdrop-filter: blur(18px); border-radius: 16px; }
+
+/* playlist cards */
+.card { display: flex; gap: 12px; align-items: center; padding: 9px; cursor: pointer; position: relative; transition: transform .15s, border-color .15s; }
+.card:hover { border-color: var(--accent); transform: translateX(-2px); }
+.card.cur { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
+.card.cur::before { content: ""; position: absolute; left: -1px; top: 14px; bottom: 14px; width: 3px; border-radius: 3px; background: var(--accent); }
+.thumb { flex: none; width: 92px; height: 56px; border-radius: 10px; display: grid; place-items: center; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 55%, var(--canvas)), color-mix(in srgb, var(--match) 35%, var(--canvas))); }
+.thumb::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.18), transparent 55%); }
+.thumb svg { width: 24px; height: 24px; color: var(--on-accent); opacity: .9; position: relative; z-index: 1; }
+.thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.thumb.has svg { width: 22px; height: 22px; padding: 5px; box-sizing: content-box; border-radius: 50%; color: #fff;
+  background: rgba(0,0,0,.42); opacity: 0; transition: opacity .15s; backdrop-filter: blur(4px); }
+.card:hover .thumb.has svg, .card.cur .thumb.has svg { opacity: 1; }
+.thumb.audio.has img { object-fit: cover; }
+.dur { position: absolute; right: 5px; bottom: 4px; z-index: 1; font-size: 10.5px; font-weight: 600; color: #fff; padding: 1px 5px; border-radius: 5px; background: rgba(0,0,0,.55); }
+[dir=rtl] .card:hover { transform: translateX(2px); }
+[dir=rtl] .card.cur::before { left: auto; right: -1px; }
+[dir=rtl] .rm { right: auto; left: 8px; }
+[dir=rtl] .wrap { border-left: 0; border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+[dir=rtl] body.left .wrap { border-right: 0; border-left: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+[dir=rtl] .head .x { margin-left: 0; margin-right: auto; }
+[dir=rtl] .head .tools { margin-left: 0; margin-right: auto; }
+[dir=rtl] .head .tools:not(.hidden) + .x { margin-right: 2px; }
+[dir=rtl] .row em { margin-left: 0; margin-right: auto; }
+[dir=rtl] .sec h2 { letter-spacing: 0; }
+.meta { min-width: 0; flex: 1; }
+.meta b { display: block; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta small { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12.5px; margin-top: 5px; }
+.badge { padding: 2px 9px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 650; font-size: 11.5px; }
+.rm { position: absolute; right: 8px; top: 8px; width: 24px; height: 24px; border-radius: 7px; display: none; place-items: center; color: var(--muted); }
+.card:hover .rm { display: grid; }
+.rm:hover { background: color-mix(in srgb, var(--text) 12%, transparent); color: var(--text); }
+.empty { text-align: center; color: var(--muted); padding: 40px 12px; font-size: 14px; line-height: 1.6; }
+.foot { display: flex; gap: 8px; }
+.btn { flex: 1; font: inherit; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 12px; cursor: pointer; color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent); background: color-mix(in srgb, var(--surface) 75%, transparent);
+  display: flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; min-width: 0; }
+.btn.primary { flex: 1.35; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent)); color: var(--on-accent); border-color: transparent; }
+.btn svg { width: 16px; height: 16px; }
+
+/* menu sections */
+.sec { padding: 12px; }
+.sec h2 { margin: 0 0 9px; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.sec h2 svg { width: 15px; height: 15px; color: var(--accent); }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; font-size: 13.5px; }
+.row:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.row .dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--muted); flex: none; position: relative; }
+.row.on .dot { border-color: var(--accent); }
+.row.on .dot::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--accent); }
+.row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row em { margin-left: auto; font-style: normal; color: var(--muted); font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 7px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+.chip:hover { border-color: var(--accent); }
+.chip.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.th { border-radius: 11px; padding: 6px; cursor: pointer; border: 1.5px solid color-mix(in srgb, var(--border) 50%, transparent); }
+.th.on { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.th i { display: block; height: 30px; border-radius: 7px; position: relative; }
+.th i::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 6px; height: 4px; border-radius: 2px; background: var(--sw); }
+.th span { display: block; font-size: 10.5px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+::-webkit-scrollbar { width: 7px; } ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--border) 70%, transparent); border-radius: 4px; }
+.hidden { display: none !important; }
+body.drop .wrap { outline: 2px dashed var(--accent); outline-offset: -8px; border-radius: 18px; }
+</style>
+</head>
+<body>
+<div id="art"></div>
+<div class="wrap">
+  <div class="head"><h1 id="title">Up next</h1><span class="count" id="count"></span>
+    <div class="tools" id="pltools"><div class="x" data-a="savepl" title="Save playlist (Ctrl+S)" data-ti="Save playlist (Ctrl+S)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3M7 21v-7h10v7"/></svg></div><div class="x" data-a="loadpl" title="Load playlist (Ctrl+L)" data-ti="Load playlist (Ctrl+L)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 13h8M13 10l3 3-3 3"/></svg></div></div>
+    <div class="x" id="close" title="Close" data-ti="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+
+  <div class="scroll" id="playlist"></div>
+  <div class="foot" id="plfoot">
+    <button class="btn primary" data-a="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-t="Add files">Add files</span></button>
+    <button class="btn" data-a="shuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg><span data-t="Shuffle">Shuffle</span></button>
+    <button class="btn" data-a="clear"><span data-t="Clear">Clear</span></button>
+  </div>
+
+  <div class="scroll hidden" id="menu"></div>
+</div>
+<script>/*LANDSCAPE*/</script>
+<script>
+window.addEventListener("error", (e) => { try { chrome.webview.postMessage(JSON.stringify({ a: "jserror", v: String(e.message) + " @" + e.lineno })); } catch (x) {} });
+</script>
+<script>
+const ICON = {
+  video: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+  audio: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18.5a3 3 0 1 1-2-2.83V5l12-2v12.5a3 3 0 1 1-2-2.83V7.3L9 8.6z"/></svg>',
+  x: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  sub: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 14h4M14 14h3M7 10h10"/></svg>',
+  aud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  vid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
+  chap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>',
+  speed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 18a8 8 0 1 1 14 0"/><path d="M12 14l4-5"/></svg>',
+  aspect: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M7 10v4h3M17 14v-4h-3"/></svg>',
+  eq: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>',
+  theme: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17z" fill="currentColor"/></svg>',
+};
+const send = (o) => window.chrome && chrome.webview ? chrome.webview.postMessage(JSON.stringify(o)) : (window.__sent = (window.__sent || []).concat([o]));
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let L = { t: {} };
+const T = (s) => (L.t && L.t[s]) || s;
+const thumbs = {};
+const S = { fx: { norm: false, amp: 100 }, mode: "playlist", playlist: [], tracks: [], chapters: [], chapter: -1, speed: 1, aspect: "-1", themes: [], theme: "" };
+const AUDIO_EXT = /\.(aac|ac3|aif|aiff|amr|ape|au|caf|dff|dsf|dts|eac3|flac|m4a|m4b|mka|mp2|mp3|mpa|mpc|oga|ogg|opus|ra|spx|tak|tta|wav|weba|wma|wv)$/i;
+const $ = (id) => document.getElementById(id);
+const base = (p) => String(p).split(/[\\/]/).pop();
+
+function renderPlaylist() {
+  const pl = S.playlist;
+  $("count").textContent = pl.length ? `${pl.length} ${T(pl.length === 1 ? "item" : "items")}` : "";
+  if (!pl.length) { $("playlist").innerHTML = `<div class="empty">${esc(T("Nothing queued yet."))}<br>${esc(T("Add files, or drop them on the player."))}</div>`; return; }
+  $("playlist").innerHTML = pl.map((e, i) => {
+    const name = e.title || base(e.filename);
+    const audio = AUDIO_EXT.test(e.filename);
+    const th = thumbs[e.filename];
+    return `<div class="card glass ${e.current ? "cur" : ""}" data-i="${i}">
+      <div class="thumb ${audio ? "audio" : ""} ${th ? "has" : ""}" data-f="${esc(e.filename)}">${th ? `<img src="${th}" alt="">` : ""}${th || !audio ? ICON.video : ICON.audio}</div>
+      <div class="meta"><b title="${esc(name)}" dir="auto">${esc(name)}</b>
+        <small>${i + 1}${e.current ? '<span class="badge">' + esc(T(e.playing === false ? "Paused" : "Playing")) + "</span>" : ""}</small></div>
+      <div class="rm" data-rm="${i}" title="${esc(T("Remove"))}">${ICON.x}</div></div>`;
+  }).join("");
+}
+function rows(list, cur, act) {
+  return list.map((t) => `<div class="row ${t.on ? "on" : ""}" data-a="${act}" data-v="${esc(t.v)}"><div class="dot"></div><span>${esc(t.label)}</span>${t.note ? `<em>${esc(t.note)}</em>` : ""}</div>`).join("");
+}
+function trackLabel(t) {
+  const parts = [t.title, t.lang && t.lang.toUpperCase()].filter(Boolean);
+  return parts.length ? parts.join(" · ") : `${T("Track")} ${t.id}`;
+}
+function renderMenu() {
+  const by = (type) => S.tracks.filter((t) => t.type === type);
+  const aud = by("audio"), sub = by("sub"), vid = by("video").filter((t) => !t.albumart && !t.image);
+  let h = "";
+  h += `<div class="sec glass" id="sec-subtitles"><h2>${ICON.sub}${T("Subtitles")}</h2>` +
+    rows([{ label: T("Off"), v: "no", on: !sub.some((t) => t.selected) }, ...sub.map((t) => ({ label: trackLabel(t), v: t.id, on: t.selected, note: t.external ? T("File") : t.codec }))], 0, "sid") +
+    `<div class="row" data-a="loadsub"><span style="color:var(--accent);font-weight:600">+ ${T("Load subtitle file…")}</span></div></div>`;
+  h += `<div class="sec glass" id="sec-eq"><h2>${ICON.eq}${T("Sound")}</h2><div class="chips">
+    <div class="chip" data-a="eqwin">${T("Equalizer")}</div><div class="chip ${S.fx.norm ? "on" : ""}" data-a="norm">${T("Normalize")}</div>
+    ${[100, 200, 300, 500].map((a) => `<div class="chip ${S.fx.amp === a ? "on" : ""}" data-a="amp" data-v="${a}">${a}%</div>`).join("")}</div></div>`;
+  if (aud.length) h += `<div class="sec glass" id="sec-audio"><h2>${ICON.aud}${T("Audio track")}</h2>` +
+    rows(aud.map((t) => ({ label: trackLabel(t), v: t.id, on: t.selected, note: [t.codec, t["demux-channel-count"] ? t["demux-channel-count"] + "ch" : ""].filter(Boolean).join(" ") })), 0, "aid") + "</div>";
+  if (vid.length > 1) h += `<div class="sec glass"><h2>${ICON.vid}${T("Video track")}</h2>` +
+    rows(vid.map((t) => ({ label: trackLabel(t), v: t.id, on: t.selected, note: t["demux-w"] ? t["demux-w"] + "×" + t["demux-h"] : "" })), 0, "vid") + "</div>";
+  if (S.chapters.length) h += `<div class="sec glass"><h2>${ICON.chap}${T("Chapters")}</h2>` +
+    rows(S.chapters.map((c, i) => ({ label: c.title || `${T("Chapter")} ${i + 1}`, v: i, on: i === S.chapter, note: fmt(c.time) })), 0, "chapter") + "</div>";
+  const sp = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  h += `<div class="sec glass"><h2>${ICON.speed}${T("Speed")}</h2><div class="chips">${sp.map((v) => `<div class="chip ${Math.abs(S.speed - v) < 0.01 ? "on" : ""}" data-a="speed" data-v="${v}">${v}×</div>`).join("")}</div></div>`;
+  const ar = [["-1", T("Original")], ["16:9", "16:9"], ["4:3", "4:3"], ["21:9", "21:9"], ["1:1", "1:1"]];
+  h += `<div class="sec glass"><h2>${ICON.aspect}${T("Aspect ratio")}</h2><div class="chips">${ar.map(([v, l]) => `<div class="chip ${S.aspect === v ? "on" : ""}" data-a="aspect" data-v="${v}">${l}</div>`).join("")}</div></div>`;
+  h += `<div class="sec glass"><h2>${ICON.theme}${T("Theme")}</h2><div class="themes">${S.themes.map((t) =>
+    `<div class="th ${t.id === S.theme ? "on" : ""}" data-a="theme" data-v="${t.id}" title="${esc(t.name)}"><i style="background:linear-gradient(135deg,${t.canvas},${t.surface});--sw:${t.accent}"></i><span>${esc(t.name)}</span></div>`).join("")}</div></div>`;
+  $("menu").innerHTML = h;
+}
+function fmt(s) { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0"); }
+function render() { S.mode === "playlist" ? renderPlaylist() : renderMenu(); }
+
+window.OP = {
+  i18n(o) {
+    L = o;
+    document.documentElement.dir = o.dir || "ltr"; document.documentElement.lang = o.lang || "en";
+    document.querySelectorAll("[data-t]").forEach((e) => { e.dataset.en = e.dataset.en || e.textContent; e.textContent = T(e.dataset.en); });
+    document.querySelectorAll("[data-ti]").forEach((e) => (e.title = T(e.dataset.ti)));
+    $("title").textContent = T(S.mode === "playlist" ? "Up next" : "Menu");
+    render();
+  },
+  thumb(f, uri) {
+    thumbs[f] = uri;
+    if (!uri) return;
+    document.querySelectorAll(".thumb").forEach((el) => {
+      if (el.dataset.f !== f || el.querySelector("img")) return;
+      el.classList.add("has"); el.insertAdjacentHTML("afterbegin", `<img src="${uri}" alt="">`);
+      el.querySelector("svg").outerHTML = ICON.video;
+    });
+  },
+  fx(o) { S.fx = o; if (S.mode === "menu") renderMenu(); },
+  mode(m, section) {
+    S.mode = m;
+    document.body.classList.toggle("left", m === "menu");
+    $("title").textContent = T(m === "playlist" ? "Up next" : "Menu");
+    $("count").textContent = "";
+    $("playlist").classList.toggle("hidden", m !== "playlist");
+    $("plfoot").classList.toggle("hidden", m !== "playlist");
+    $("pltools").classList.toggle("hidden", m !== "playlist");
+    $("menu").classList.toggle("hidden", m !== "menu");
+    render();
+    if (section) { const el = $("sec-" + section); if (el) el.scrollIntoView({ block: "start" }); }
+  },
+  theme(t) {
+    const r = document.documentElement.style;
+    for (const [k, v] of Object.entries({ canvas: t.canvas, surface: t.surface, text: t.text, muted: t.muted, accent: t.accent, "on-accent": t.onAccent, match: t.match, border: t.border })) r.setProperty("--" + k, v);
+    S.theme = t.id; if (S.mode === "menu") renderMenu();
+    document.getElementById("art").innerHTML = window.landscapeSVG ? window.landscapeSVG(t.id) : "";
+  },
+  themes(list) { S.themes = list; if (S.mode === "menu") renderMenu(); },
+  playlist(pl) { S.playlist = pl || []; if (S.mode === "playlist") renderPlaylist(); },
+  tracks(t) { S.tracks = t || []; if (S.mode === "menu") renderMenu(); },
+  chapters(c) { S.chapters = c || []; if (S.mode === "menu") renderMenu(); },
+  state(o) { Object.assign(S, o); if (S.mode === "menu") renderMenu(); },
+};
+
+document.addEventListener("click", (e) => {
+  const rm = e.target.closest("[data-rm]");
+  if (rm) { e.stopPropagation(); return send({ a: "remove", v: +rm.dataset.rm }); }
+  const card = e.target.closest(".card");
+  if (card) return send({ a: "play", v: +card.dataset.i });
+  const act = e.target.closest("[data-a]");
+  if (act) return send({ a: act.dataset.a, v: act.dataset.v ?? "" });
+  if (e.target.closest("#close")) send({ a: "close" });
+});
+// Dropped files: WebView2 hands the first file's path to the player; send the
+// names of all dropped files so the player can add every one of them.
+document.addEventListener("dragenter", () => document.body.classList.add("drop"));
+document.addEventListener("dragleave", (e) => { if (!e.relatedTarget) document.body.classList.remove("drop"); });
+document.addEventListener("drop", (e) => {
+  document.body.classList.remove("drop");
+  const names = [...(e.dataTransfer && e.dataTransfer.files || [])].map((f) => f.name);
+  if (names.length) send({ a: "dropnames", v: names.join("\n") });
+}, true);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") send({ a: "close" }); });
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+send({ a: "ready" });
+</script>
+</body>
+</html>

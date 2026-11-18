@@ -1,0 +1,20 @@
+1 ICON "../openplayer/openplayer.ico"
+1 24 "setup.manifest"
+1 VERSIONINFO
+FILEVERSION 0,8,0,0
+PRODUCTVERSION 0,8,0,0
+FILEOS 0x40004
+FILETYPE 1
+{
+  BLOCK "StringFileInfo" {
+    BLOCK "040904B0" {
+      VALUE "ProductName", "OpenPlayer"
+      VALUE "FileDescription", "OpenPlayer Setup"
+      VALUE "FileVersion", "0.8.0"
+      VALUE "ProductVersion", "0.8.0"
+      VALUE "OriginalFilename", "OpenPlayer-Setup.exe"
+      VALUE "LegalCopyright", "Open source"
+    }
+  }
+  BLOCK "VarFileInfo" { VALUE "Translation", 0x0409, 0x04B0 }
+}

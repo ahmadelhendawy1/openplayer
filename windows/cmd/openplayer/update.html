@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+:root { --canvas:#0e0b07; --surface:#120d07; --text:#f6ead4; --muted:#bfae8e; --accent:#f5b942; --on-accent:#1a1206; --match:#ffcf6b; --border:#5a4318;
+  --font:"Segoe UI Variable Text","Segoe UI",Tahoma,system-ui,sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--font); color: var(--text); font-size: 14px; overflow: hidden; user-select: none;
+  background:
+    radial-gradient(70% 55% at 100% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%),
+    radial-gradient(60% 50% at 0% 100%, color-mix(in srgb, var(--match) 12%, transparent), transparent 70%),
+    var(--canvas); display: flex; flex-direction: column; }
+.top { display: flex; gap: 16px; align-items: center; padding: 22px 24px 10px; }
+.badge { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; flex: none;
+  background: var(--accent); color: var(--on-accent); box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 45%, transparent); }
+.badge svg { width: 28px; height: 28px; }
+h1 { margin: 0; font-size: 20px; font-weight: 700; }
+.ver { margin-top: 4px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; direction: ltr; justify-content: flex-start; }
+[dir=rtl] .ver { justify-content: flex-end; }
+.ver b { color: var(--text); padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+.card { margin: 8px 24px 0; padding: 14px 18px; border-radius: 14px; flex: 1; overflow-y: auto; min-height: 0;
+  background: color-mix(in srgb, var(--surface) 80%, transparent); border: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+.card h2 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 650; }
+[dir=rtl] .card h2 { letter-spacing: 0; }
+ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 7px; line-height: 1.5; }
+li::marker { color: var(--accent); }
+.prog { margin: 14px 24px 0; display: none; }
+.prog.on { display: block; }
+.bar { height: 8px; border-radius: 6px; background: color-mix(in srgb, var(--text) 14%, transparent); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 6px; transition: width .2s; }
+.prog small { display: block; margin-top: 6px; color: var(--muted); }
+.msg { margin: 14px 24px 0; padding: 10px 14px; border-radius: 12px; display: none; font-size: 13.5px;
+  background: color-mix(in srgb, #ff6b81 16%, transparent); border: 1px solid color-mix(in srgb, #ff6b81 40%, transparent); }
+.msg.on { display: block; }
+.btns { display: flex; gap: 10px; padding: 16px 24px 20px; align-items: center; }
+.btns .sp { flex: 1; }
+button { font: inherit; font-weight: 650; padding: 10px 18px; border-radius: 11px; cursor: pointer; color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent); background: color-mix(in srgb, var(--surface) 80%, transparent); }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; padding: 10px 22px; }
+button:disabled { opacity: .55; cursor: default; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.link { background: none; border: 0; color: var(--muted); padding: 10px 4px; text-decoration: underline; font-weight: 500; }
+.uptodate .card, .uptodate #upd, .uptodate #page { display: none; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></div>
+  <div>
+    <h1 id="title"></h1>
+    <div class="ver" id="ver"></div>
+    <div class="meta" id="meta"></div>
+  </div>
+</div>
+<div class="card" id="card"><h2 id="newH"></h2><ul id="notes"></ul></div>
+<div class="prog" id="prog"><div class="bar"><i id="barI"></i></div><small id="progT"></small></div>
+<div class="msg" id="msg"></div>
+<div class="btns">
+  <button class="link" id="page"></button>
+  <span class="sp"></span>
+  <button id="later"></button>
+  <button class="primary" id="upd"></button>
+</div>
+<script>
+window.addEventListener("error", (e) => { try { chrome.webview.postMessage(JSON.stringify({ a: "jserror", v: String(e.message) + " @" + e.lineno })); } catch (x) {} });
+</script>
+<script>
+const send = (o) => window.chrome && chrome.webview ? chrome.webview.postMessage(JSON.stringify(o)) : (window.__sent = (window.__sent || []).concat([o]));
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let L = { t: {} }, D = null;
+const T = (s) => (L.t && L.t[s]) || s;
+function render() {
+  if (!D) return;
+  document.documentElement.dir = L.dir || "ltr"; document.documentElement.lang = L.lang || "en";
+  document.body.classList.toggle("uptodate", !D.newer);
+  $("title").textContent = D.newer ? T("A new version of OpenPlayer is ready") : T("OpenPlayer is up to date");
+  $("ver").innerHTML = D.newer ? `<span>${esc(D.current)}</span><span>→</span><b>${esc(D.version)}</b>` : `<b>${esc(D.current)}</b>`;
+  const meta = [];
+  if (D.newer && D.date) meta.push(T("Released") + " " + D.date);
+  if (D.newer && D.size) meta.push(D.size + " " + T("MB"));
+  $("meta").textContent = meta.join(" · ");
+  $("newH").textContent = T("What's new");
+  $("notes").innerHTML = (D.notes || []).map((n) => `<li dir="auto">${esc(n)}</li>`).join("") || `<li>${esc(T("Improvements and fixes."))}</li>`;
+  $("upd").textContent = D.canSelf ? T("Update now") : T("Open the download page");
+  $("later").textContent = D.newer ? T("Later") : T("Close");
+  $("page").textContent = T("Download page");
+  $("page").classList.toggle("hidden", !D.canSelf);
+}
+window.OP = {
+  i18n(o) { L = o; render(); },
+  theme(t) {
+    const r = document.documentElement.style;
+    for (const [k, v] of Object.entries({ canvas: t.canvas, surface: t.surface, text: t.text, muted: t.muted, accent: t.accent, "on-accent": t.onAccent, match: t.match, border: t.border })) r.setProperty("--" + k, v);
+  },
+  data(d) { D = d; $("prog").classList.remove("on"); $("msg").classList.remove("on"); $("upd").disabled = false; render(); },
+  progress(p, text) {
+    $("prog").classList.add("on"); $("barI").style.width = Math.max(0, Math.min(100, p)) + "%";
+    $("progT").textContent = text; $("upd").disabled = true;
+  },
+  error(text) {
+    $("prog").classList.remove("on"); $("msg").textContent = text; $("msg").classList.add("on"); $("upd").disabled = false;
+  },
+};
+$("upd").onclick = () => send({ a: D && D.canSelf ? "update" : "page" });
+$("page").onclick = () => send({ a: "page" });
+$("later").onclick = () => send({ a: "later" });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") send({ a: "later" }); });
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+send({ a: "ready" });
+</script>
+</body>
+</html>

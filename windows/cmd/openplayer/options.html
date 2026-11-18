@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+:root { --canvas:#0e0b07; --surface:#120d07; --text:#f6ead4; --muted:#bfae8e; --accent:#f5b942; --on-accent:#1a1206; --match:#ffcf6b; --border:#5a4318;
+  --font:"Segoe UI Variable Text","Segoe UI",Tahoma,system-ui,sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--font); color: var(--text); font-size: 13.5px; overflow: hidden; display: flex;
+  background:
+    radial-gradient(60% 50% at 100% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 0% 100%, color-mix(in srgb, var(--match) 9%, transparent), transparent 70%),
+    var(--canvas); }
+nav { width: 236px; flex: none; padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto;
+  border-inline-end: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  background: color-mix(in srgb, var(--surface) 55%, transparent); }
+.search { margin: 0 4px 12px; position: relative; }
+.search input[type=text] { width: 100%; min-width: 0; max-width: none; padding: 8px 10px 8px 32px; }
+[dir=rtl] .search input[type=text] { padding: 8px 32px 8px 10px; }
+.search svg { position: absolute; inset-inline-start: 10px; top: 9px; width: 15px; height: 15px; color: var(--muted); }
+nav a { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px; cursor: pointer; color: var(--text); text-decoration: none; font-weight: 500; }
+nav a svg { width: 18px; height: 18px; color: var(--muted); flex: none; }
+nav a:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+nav a.on { background: color-mix(in srgb, var(--accent) 18%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+[dir=rtl] nav a.on { box-shadow: inset -3px 0 0 var(--accent); }
+nav a.on svg { color: var(--accent); }
+main { flex: 1; overflow-y: auto; padding: 22px 28px 40px; }
+h1 { margin: 0 0 4px; font-size: 22px; font-weight: 650; }
+.lead { color: var(--muted); margin: 0 0 18px; }
+.card { border-radius: 14px; padding: 4px 0; margin-bottom: 14px;
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 7%, transparent); }
+.card h2 { margin: 12px 18px 6px; font-size: 12px; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.row { display: flex; align-items: center; gap: 16px; padding: 12px 18px; }
+.row + .row { border-top: 1px solid color-mix(in srgb, var(--border) 30%, transparent); }
+.row .l { flex: 1; min-width: 0; }
+.row .l b { display: block; font-weight: 550; }
+.row .l small { display: block; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+.badge { display: inline-block; margin-inline-start: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  background: color-mix(in srgb, var(--match) 22%, transparent); color: var(--text); vertical-align: 1px; }
+select, input[type=text], input[type=number] { font: inherit; color: var(--text); background: color-mix(in srgb, var(--canvas) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent); border-radius: 9px; padding: 7px 10px; outline: none; min-width: 220px; max-width: 320px; }
+input[type=number] { min-width: 110px; width: 110px; }
+select option { background: var(--surface); color: var(--text); }
+select:focus, input:focus, .sw:focus-visible, button:focus-visible, nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input[type=color] { width: 54px; height: 32px; padding: 2px; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--border) 75%, transparent); background: transparent; cursor: pointer; }
+.sw { position: relative; width: 44px; height: 24px; border-radius: 999px; cursor: pointer; flex: none; border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: color-mix(in srgb, var(--canvas) 70%, transparent); transition: background .15s; }
+.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: transform .15s; }
+.sw.on { background: var(--accent); border-color: transparent; }
+.sw.on::after { transform: translateX(20px); background: var(--on-accent); }
+[dir=rtl] .sw::after { left: auto; right: 3px; }
+[dir=rtl] .sw.on::after { transform: translateX(-20px); }
+button { font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 10px; cursor: pointer; color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent); background: color-mix(in srgb, var(--surface) 80%, transparent); }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+button.danger:hover { border-color: #ff6b81; }
+.ver { margin-top: auto; padding: 12px; color: var(--muted); font-size: 12px; }
+.empty { color: var(--muted); padding: 30px 0; }
+.toast { position: fixed; bottom: 18px; inset-inline-end: 22px; padding: 10px 16px; border-radius: 10px; background: var(--accent); color: var(--on-accent);
+  font-weight: 600; opacity: 0; transform: translateY(8px); transition: .2s; pointer-events: none; }
+.toast.show { opacity: 1; transform: none; }
+::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--border) 70%, transparent); border-radius: 4px; }
+</style>
+</head>
+<body>
+<nav id="nav">
+  <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input type="text" id="q" placeholder="Search options" data-tp="Search options" aria-label="Search options"></div>
+  <div id="secs"></div>
+  <div class="ver" id="ver"></div>
+</nav>
+<main id="main" tabindex="-1"></main>
+<div class="toast" id="toast"></div>
+<script>
+window.addEventListener("error", (e) => { try { chrome.webview.postMessage(JSON.stringify({ a: "jserror", v: String(e.message) + " @" + e.lineno })); } catch (x) {} });
+</script>
+<script>
+const send = (o) => window.chrome && chrome.webview ? chrome.webview.postMessage(JSON.stringify(o)) : (window.__sent = (window.__sent || []).concat([o]));
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let L = { t: {} };
+const T = (s) => (L.t && L.t[s]) || s;
+const ICONS = {
+  ui: '<path d="M4 5h16v11H4zM8 20h8M12 16v4"/>',
+  play: '<path d="M8 5.5v13l10-6.5z"/>',
+  video: '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10l5-3v10l-5-3z"/>',
+  audio: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>',
+  sub: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 14h4M14 14h3M7 10h10"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  speed: '<path d="M5 18a8 8 0 1 1 14 0"/><path d="M12 14l4-5"/>',
+  update: '<path d="M20 11a8 8 0 0 0-14.9-3M4 13a8 8 0 0 0 14.9 3"/><path d="M5 3v5h5M19 21v-5h-5"/>',
+  code: '<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',
+};
+const svg = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ""}</svg>`;
+let D = { sections: [], version: "" }, cur = "interface";
+
+function translate() {
+  document.documentElement.dir = L.dir || "ltr";
+  document.documentElement.lang = L.lang || "en";
+  document.querySelectorAll("[data-tp]").forEach((e) => (e.placeholder = T(e.dataset.tp)));
+}
+function control(o) {
+  const k = esc(o.key);
+  switch (o.kind) {
+    case "toggle": return `<div class="sw ${o.value === "yes" ? "on" : ""}" role="switch" tabindex="0" aria-checked="${o.value === "yes"}" data-k="${k}" aria-label="${esc(T(o.label))}"></div>`;
+    case "choice": {
+      let opts = (o.choices || []).map((c) => `<option value="${esc(c.v)}" ${c.v === o.value ? "selected" : ""}>${esc(T(c.l))}</option>`).join("");
+      if (!(o.choices || []).some((c) => c.v === o.value)) opts = `<option value="${esc(o.value)}" selected>${esc(o.value || T("Default"))}</option>` + opts;
+      return `<select data-k="${k}" aria-label="${esc(T(o.label))}">${opts}</select>`;
+    }
+    case "number": return `<input type="number" data-k="${k}" value="${esc(o.value)}" min="${o.min}" max="${o.max}" step="${o.step || 1}" aria-label="${esc(T(o.label))}">`;
+    case "text": return `<input type="text" data-k="${k}" value="${esc(o.value)}" aria-label="${esc(T(o.label))}" spellcheck="false">`;
+    case "color": return `<input type="color" data-k="${k}" value="${esc(o.value)}" aria-label="${esc(T(o.label))}">`;
+    case "action": return `<button data-act="${esc(o.key.slice(4))}" class="${o.key === "act:reset" ? "danger" : o.key === "act:eq" ? "primary" : ""}">${esc(T(o.def))}</button>`;
+  }
+  return "";
+}
+function row(o) {
+  return `<div class="row"><div class="l"><b>${esc(T(o.label))}${o.restart ? `<span class="badge">${esc(T("Restart needed"))}</span>` : ""}</b>${o.help ? `<small>${esc(T(o.help))}</small>` : ""}</div>${control(o)}</div>`;
+}
+function render() {
+  const q = $("q").value.trim().toLowerCase();
+  $("secs").innerHTML = D.sections.map((s) => `<a class="${s.id === cur && !q ? "on" : ""}" data-s="${s.id}" tabindex="0">${svg(s.icon)}<span>${esc(T(s.label))}</span></a>`).join("");
+  let h = "";
+  if (q) {
+    const hits = [];
+    for (const s of D.sections) for (const o of s.items) {
+      const hay = [o.label, T(o.label), o.help, T(o.help || ""), s.label, T(s.label), o.key].join(" ").toLowerCase();
+      if (hay.includes(q)) hits.push(o);
+    }
+    h = `<h1>${esc(T("Search results"))}</h1><p class="lead"></p>` + (hits.length ? `<div class="card">${hits.map(row).join("")}</div>` : `<div class="empty">${esc(T("No matching options"))}</div>`);
+  } else {
+    const s = D.sections.find((x) => x.id === cur) || D.sections[0];
+    if (!s) return;
+    h = `<h1>${esc(T(s.label))}</h1><p class="lead">${esc(T("Changes apply right away and are saved."))}</p><div class="card">${s.items.map(row).join("")}</div>`;
+  }
+  $("main").innerHTML = h;
+  $("ver").textContent = "OpenPlayer " + D.version;
+}
+let toastT;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1800); }
+function setVal(k, v, restart) {
+  for (const s of D.sections) for (const o of s.items) if (o.key === k) { o.value = v; restart = o.restart; }
+  send({ a: "set", v: { key: k, value: v } });
+  toast(T(restart ? "Saved. Restart OpenPlayer to apply." : "Saved"));
+}
+
+window.OP = {
+  i18n(o) { L = o; translate(); render(); },
+  theme(t) {
+    const r = document.documentElement.style;
+    for (const [k, v] of Object.entries({ canvas: t.canvas, surface: t.surface, text: t.text, muted: t.muted, accent: t.accent, "on-accent": t.onAccent, match: t.match, border: t.border })) r.setProperty("--" + k, v);
+  },
+  data(d) { D = d; if (d.section) cur = d.section; render(); },
+};
+$("secs").addEventListener("click", (e) => { const a = e.target.closest("[data-s]"); if (a) { cur = a.dataset.s; $("q").value = ""; render(); $("main").scrollTop = 0; } });
+$("secs").addEventListener("keydown", (e) => { if (e.key === "Enter") e.target.click(); });
+$("q").addEventListener("input", render);
+$("main").addEventListener("change", (e) => {
+  const el = e.target.closest("[data-k]"); if (!el || el.classList.contains("sw")) return;
+  if (el.type === "number") { const n = +el.value; if (isNaN(n) || n < +el.min || n > +el.max) { el.value = Math.min(+el.max, Math.max(+el.min, n || +el.min)); } }
+  setVal(el.dataset.k, el.value);
+});
+const flip = (el) => { const on = !el.classList.contains("on"); el.classList.toggle("on", on); el.setAttribute("aria-checked", on); setVal(el.dataset.k, on ? "yes" : "no"); };
+$("main").addEventListener("click", (e) => {
+  const sw = e.target.closest(".sw"); if (sw) return flip(sw);
+  const b = e.target.closest("[data-act]"); if (b) send({ a: "act", v: b.dataset.act });
+});
+$("main").addEventListener("keydown", (e) => { const sw = e.target.closest(".sw"); if (sw && (e.key === " " || e.key === "Enter")) { e.preventDefault(); flip(sw); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") send({ a: "close" }); if (e.ctrlKey && e.key.toLowerCase() === "f") { e.preventDefault(); $("q").focus(); } });
+document.addEventListener("contextmenu", (e) => { if (!e.target.closest("input")) e.preventDefault(); });
+send({ a: "ready" });
+</script>
+</body>
+</html>

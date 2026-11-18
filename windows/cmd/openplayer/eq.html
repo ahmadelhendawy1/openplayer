@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+:root { --canvas:#0e0b07; --surface:#120d07; --text:#f6ead4; --muted:#bfae8e; --accent:#f5b942; --on-accent:#1a1206; --match:#ffcf6b; --border:#5a4318;
+  --font:"Segoe UI Variable Text","Segoe UI",Tahoma,system-ui,sans-serif; --tint:.80; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: transparent; }
+body { font-family: var(--font); color: var(--text); overflow: hidden; user-select: none; -webkit-user-select: none; font-size: 12.5px; }
+.shell { position: absolute; inset: 0; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;
+  background:
+    radial-gradient(70% 60% at 0% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(60% 60% at 100% 100%, color-mix(in srgb, var(--match) 12%, transparent), transparent 70%),
+    color-mix(in srgb, var(--surface) calc(var(--tint) * 100%), transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 12%, transparent); }
+.head { display: flex; align-items: center; gap: 10px; padding: 10px 12px 6px 14px; cursor: move; }
+.head h1 { margin: 0; font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 8px; }
+.head h1 svg { width: 17px; height: 17px; color: var(--accent); }
+.grow { flex: 1; }
+select, input[type=text] { font: inherit; color: var(--text); background: color-mix(in srgb, var(--canvas) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: 9px; padding: 5px 8px; outline: none; }
+select:focus-visible, input[type=text]:focus, .ib:focus-visible, .sw:focus-visible, .sl:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+select option, select optgroup { background: var(--surface); color: var(--text); }
+.ib { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; cursor: pointer; color: var(--muted); border: 0; background: none; }
+.ib:hover { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); }
+.ib svg { width: 16px; height: 16px; }
+/* on/off switch */
+.sw { position: relative; width: 38px; height: 21px; border-radius: 999px; cursor: pointer; flex: none; border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: color-mix(in srgb, var(--canvas) 60%, transparent); transition: background .15s; }
+.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: var(--muted); transition: transform .15s, background .15s; }
+.sw.on { background: var(--accent); border-color: transparent; }
+.sw.on::after { transform: translateX(17px); background: var(--on-accent); }
+.lab { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+/* bands */
+.bands { position: relative; flex: 1; display: flex; gap: 2px; padding: 4px 14px 2px; direction: ltr; }
+.bands svg.curve { position: absolute; left: 70px; right: 14px; top: 12px; height: calc(100% - 40px); width: calc(100% - 84px); pointer-events: none; overflow: visible; }
+.band { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
+.band.pre { flex: none; width: 52px; margin-right: 6px; border-right: 1px solid color-mix(in srgb, var(--border) 50%, transparent); }
+.band b { font-size: 10.5px; font-weight: 600; color: var(--muted); }
+.band .val { font-size: 10px; color: var(--text); opacity: .85; height: 13px; font-variant-numeric: tabular-nums; }
+.sl { position: relative; flex: 1; width: 26px; cursor: ns-resize; touch-action: none; border-radius: 8px; }
+.sl .tr { position: absolute; left: 50%; top: 6px; bottom: 6px; width: 4px; transform: translateX(-50%); border-radius: 3px;
+  background: color-mix(in srgb, var(--text) 16%, transparent); }
+.sl .zero { position: absolute; left: 4px; right: 4px; top: 50%; height: 1px; background: color-mix(in srgb, var(--text) 25%, transparent); }
+.sl .fill { position: absolute; left: 50%; width: 4px; transform: translateX(-50%); border-radius: 3px; background: var(--accent); }
+.sl .kn { position: absolute; left: 50%; width: 20px; height: 12px; transform: translate(-50%, -50%); border-radius: 6px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 95%, white), color-mix(in srgb, var(--text) 70%, var(--canvas)));
+  box-shadow: 0 2px 6px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6); }
+.off .sl .fill { background: var(--muted); opacity: .5; }
+.off .curve path { opacity: .25; }
+.foot { display: flex; align-items: center; gap: 14px; padding: 8px 14px 12px; flex-wrap: wrap; }
+.amp { display: flex; align-items: center; gap: 8px; }
+.amp input[type=range] { width: 150px; accent-color: var(--accent); }
+.amp output { min-width: 42px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.amp.hot output { color: var(--match); }
+.btn { font: inherit; font-weight: 600; padding: 6px 11px; border-radius: 9px; cursor: pointer; color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.saveRow { display: none; align-items: center; gap: 6px; }
+.saving .saveRow { display: flex; }
+.saving .normalRow { display: none; }
+.normalRow { display: flex; gap: 6px; }
+[dir=rtl] .sw::after { left: auto; right: 2px; }
+[dir=rtl] .sw.on::after { transform: translateX(-17px); }
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+  <div class="head" id="drag">
+    <h1><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span data-t="Equalizer">Equalizer</span></h1>
+    <div class="sw" id="eqOn" role="switch" tabindex="0" aria-label="Equalizer"></div>
+    <div class="grow"></div>
+    <select id="preset" aria-label="Preset"></select>
+    <button class="ib" id="close" title="Close" data-ti="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="bands" id="bands"></div>
+  <div class="foot" id="foot">
+    <label class="lab"><div class="sw" id="norm" role="switch" tabindex="0"></div><span data-t="Normalize">Normalize</span></label>
+    <div class="amp" id="ampBox"><span class="lab" data-t="Amplifier">Amplifier</span>
+      <input type="range" id="amp" min="100" max="500" step="10" aria-label="Amplifier"><output id="ampV">100%</output></div>
+    <div class="grow"></div>
+    <div class="normalRow">
+      <button class="btn" id="reset" data-t="Reset">Reset</button>
+      <button class="btn" id="del" data-t="Delete preset">Delete preset</button>
+      <button class="btn primary" id="save" data-t="Save preset…">Save preset…</button>
+    </div>
+    <div class="saveRow">
+      <input type="text" id="name" maxlength="40" placeholder="Preset name" data-tp="Preset name">
+      <button class="btn primary" id="saveOk" data-t="Save">Save</button>
+      <button class="btn" id="saveNo" data-t="Cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+<script>
+window.addEventListener("error", (e) => { try { chrome.webview.postMessage(JSON.stringify({ a: "jserror", v: String(e.message) + " @" + e.lineno })); } catch (x) {} });
+</script>
+<script>
+const send = (o) => window.chrome && chrome.webview ? chrome.webview.postMessage(JSON.stringify(o)) : (window.__sent = (window.__sent || []).concat([o]));
+const $ = (id) => document.getElementById(id);
+let L = { t: {} };
+const T = (s) => (L.t && L.t[s]) || s;
+const S = { eq: false, preset: "Flat", pre: 0, bands: [0,0,0,0,0,0,0,0,0,0], norm: false, amp: 100, presets: [], user: [], freqs: [31,62,125,250,500,1000,2000,4000,8000,16000] };
+const MAX = 12;
+const fl = (f) => f >= 1000 ? (f / 1000) + "k" : String(f);
+const db = (v) => (v > 0 ? "+" : "") + (Math.round(v * 10) / 10);
+
+function translate() {
+  document.documentElement.dir = L.dir || "ltr";
+  document.documentElement.lang = L.lang || "en";
+  document.querySelectorAll("[data-t]").forEach((e) => { e.dataset.en = e.dataset.en || e.textContent; e.textContent = T(e.dataset.en); });
+  document.querySelectorAll("[data-ti]").forEach((e) => (e.title = T(e.dataset.ti)));
+  document.querySelectorAll("[data-tp]").forEach((e) => (e.placeholder = T(e.dataset.tp)));
+}
+
+function buildBands() {
+  const mk = (i, label) => `<div class="band ${i < 0 ? "pre" : ""}"><span class="val" id="v${i}"></span>
+    <div class="sl" data-i="${i}" tabindex="0" role="slider" aria-valuemin="-12" aria-valuemax="12" aria-label="${label}"><div class="tr"></div><div class="zero"></div><div class="fill"></div><div class="kn"></div></div><b>${label}</b></div>`;
+  $("bands").innerHTML = mk(-1, T("Preamp")) + S.freqs.map((f, i) => mk(i, fl(f))).join("") +
+    '<svg class="curve" preserveAspectRatio="none"><path fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity=".55"/></svg>';
+  document.querySelectorAll(".sl").forEach(bindSlider);
+}
+const getV = (i) => (i < 0 ? S.pre : S.bands[i]);
+function drawSlider(i) {
+  const el = document.querySelector(`.sl[data-i="${i}"]`); if (!el) return;
+  const v = getV(i), h = el.clientHeight - 12, y = 6 + h * (1 - (v + MAX) / (2 * MAX)), mid = 6 + h / 2;
+  el.querySelector(".kn").style.top = y + "px";
+  const f = el.querySelector(".fill"); f.style.top = Math.min(y, mid) + "px"; f.style.height = Math.abs(y - mid) + "px";
+  el.setAttribute("aria-valuenow", v);
+  $("v" + i).textContent = db(v);
+}
+function drawCurve() {
+  const svg = document.querySelector(".curve"); if (!svg) return;
+  const sls = [...document.querySelectorAll(".sl")].slice(1), r0 = svg.getBoundingClientRect();
+  const pts = sls.map((el, i) => { const r = el.getBoundingClientRect(); const h = r.height - 12;
+    return [r.left + r.width / 2 - r0.left, r.top - r0.top + 6 + h * (1 - (S.bands[i] + MAX) / (2 * MAX))]; });
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], cx = (x0 + x1) / 2; d += ` C${cx},${y0} ${cx},${y1} ${x1},${y1}`; }
+  svg.setAttribute("viewBox", `0 0 ${r0.width} ${r0.height}`);
+  svg.querySelector("path").setAttribute("d", d);
+}
+function drawAll() { for (let i = -1; i < 10; i++) drawSlider(i); drawCurve(); }
+
+let lastSend = 0, pending = null;
+function setBand(i, v, commit) {
+  v = Math.max(-MAX, Math.min(MAX, Math.round(v * 2) / 2));
+  if (i < 0) S.pre = v; else S.bands[i] = v;
+  if (i >= 0) { S.preset = "Custom"; S.eq = true; }
+  drawSlider(i); drawCurve(); renderTop();
+  const msg = { a: "band", v: { i, g: v } };
+  const now = Date.now();
+  clearTimeout(pending);
+  if (commit || now - lastSend > 90) { lastSend = now; send(msg); } else pending = setTimeout(() => { lastSend = Date.now(); send(msg); }, 90);
+  if (commit) send({ a: "commit" });
+}
+function bindSlider(el) {
+  const i = +el.dataset.i;
+  const at = (e) => { const r = el.getBoundingClientRect(), h = r.height - 12; return MAX - ((e.clientY - r.top - 6) / h) * 2 * MAX; };
+  el.addEventListener("pointerdown", (e) => { el.setPointerCapture(e.pointerId); setBand(i, at(e)); el.focus(); });
+  el.addEventListener("pointermove", (e) => { if (el.hasPointerCapture(e.pointerId)) setBand(i, at(e)); });
+  el.addEventListener("pointerup", (e) => { if (el.hasPointerCapture(e.pointerId)) setBand(i, at(e), true); });
+  el.addEventListener("dblclick", () => setBand(i, 0, true));
+  el.addEventListener("wheel", (e) => { e.preventDefault(); setBand(i, getV(i) + (e.deltaY < 0 ? 1 : -1), true); });
+  el.addEventListener("keydown", (e) => {
+    const step = { ArrowUp: 0.5, ArrowRight: 0.5, ArrowDown: -0.5, ArrowLeft: -0.5, PageUp: 3, PageDown: -3 }[e.key];
+    if (step) { e.preventDefault(); setBand(i, getV(i) + step, true); }
+    if (e.key === "Home" || e.key === "0") setBand(i, 0, true);
+  });
+}
+function renderTop() {
+  $("eqOn").classList.toggle("on", S.eq); $("eqOn").setAttribute("aria-checked", S.eq);
+  $("bands").classList.toggle("off", !S.eq);
+  $("norm").classList.toggle("on", S.norm); $("norm").setAttribute("aria-checked", S.norm);
+  const sel = $("preset");
+  const opt = (n, label) => `<option value="${n.replace(/"/g, "&quot;")}" ${n === S.preset ? "selected" : ""}>${label.replace(/</g, "&lt;")}</option>`;
+  let h = S.preset === "Custom" ? opt("Custom", T("Custom")) : "";
+  h += `<optgroup label="${T("Presets")}">` + S.presets.map((p) => opt(p, T(p))).join("") + "</optgroup>";
+  if (S.user.length) h += `<optgroup label="${T("My presets")}">` + S.user.map((p) => opt(p, p)).join("") + "</optgroup>";
+  if (sel.dataset.h !== h) { sel.innerHTML = h; sel.dataset.h = h; }
+  sel.value = S.preset;
+  $("del").style.display = S.user.includes(S.preset) ? "" : "none";
+  $("amp").value = S.amp; $("ampV").textContent = S.amp + "%"; $("ampBox").classList.toggle("hot", S.amp > 100);
+}
+
+window.OP = {
+  i18n(o) { L = o; translate(); buildBands(); renderTop(); requestAnimationFrame(drawAll); },
+  theme(t) {
+    const r = document.documentElement.style;
+    for (const [k, v] of Object.entries({ canvas: t.canvas, surface: t.surface, text: t.text, muted: t.muted, accent: t.accent, "on-accent": t.onAccent, match: t.match, border: t.border })) r.setProperty("--" + k, v);
+    r.setProperty("--tint", t.id === "high-contrast" ? "1" : t.dark ? ".78" : ".82");
+  },
+  state(o) { Object.assign(S, o); renderTop(); drawAll(); },
+};
+
+$("drag").addEventListener("pointerdown", (e) => { if (e.button === 0 && !e.target.closest("select,button,.sw")) send({ a: "drag" }); });
+$("close").onclick = () => send({ a: "close" });
+const toggle = (id, key) => { const f = () => { S[key] = !S[key]; renderTop(); send({ a: key, v: S[key] }); };
+  $(id).onclick = f; $(id).onkeydown = (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); f(); } }; };
+toggle("eqOn", "eq"); toggle("norm", "norm");
+$("preset").onchange = (e) => send({ a: "preset", v: e.target.value });
+$("amp").oninput = (e) => { S.amp = +e.target.value; renderTop(); send({ a: "amp", v: S.amp }); };
+$("amp").onchange = () => send({ a: "commit" });
+$("reset").onclick = () => send({ a: "reset" });
+$("del").onclick = () => send({ a: "delete", v: S.preset });
+$("save").onclick = () => { $("foot").classList.add("saving"); $("name").value = S.user.includes(S.preset) ? S.preset : ""; $("name").focus(); };
+const closeSave = () => $("foot").classList.remove("saving");
+$("saveNo").onclick = closeSave;
+$("saveOk").onclick = () => { const n = $("name").value.trim(); if (n) { send({ a: "save", v: n }); closeSave(); } else $("name").focus(); };
+$("name").onkeydown = (e) => { if (e.key === "Enter") $("saveOk").click(); if (e.key === "Escape") { e.stopPropagation(); closeSave(); } };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("foot").classList.contains("saving")) send({ a: "close" }); });
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+window.addEventListener("resize", () => drawAll());
+buildBands(); renderTop();
+send({ a: "ready" });
+</script>
+</body>
+</html>

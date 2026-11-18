@@ -1,0 +1,14 @@
+OpenPlayer — third-party notices (draft, not yet audited)
+
+Playback engine: libmpv-2.dll
+  Source build: zhongfly/mpv-winbuild, release 20261104, git ff8ca979b0
+  (https://github.com/zhongfly/mpv-winbuild), built from mpv
+  (https://github.com/mpv-player/mpv) with -Dgpl=false, i.e. the LGPL-2.1-or-later
+  configuration of libmpv.
+  The DLL statically contains FFmpeg and other libraries (libass, libplacebo, dav1d,
+  libbluray, libarchive, lua, libcurl and more) under their own licenses.
+  A full per-library license audit has NOT been done yet; do not redistribute
+  OpenPlayer publicly until that audit and the license texts are added.
+
+The engine is a separate DLL (engine\libmpv-2.dll) and can be replaced with your own
+build of the same libraries, as the LGPL requires.

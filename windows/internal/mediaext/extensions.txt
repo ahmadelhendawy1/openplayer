@@ -1,0 +1,3 @@
+video: 3g2 3gp asf avi divx dv f4v flv m2ts m2v m4v mk3d mkv mov mp4 mpe mpeg mpg mts mxf nsv ogm ogv qt rm rmvb tp trp ts vob webm wmv wtv y4m
+audio: aac ac3 aif aiff amr ape au caf dff dsf dts eac3 flac m4a m4b mka mp2 mp3 mpa mpc oga ogg opus ra spx tak tta wav weba wma wv
+subtitle: ass idx smi srt ssa sub sup vtt

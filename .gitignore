@@ -1,0 +1,25 @@
+# build output
+windows/build/
+windows/installer/*.exe
+windows/cmd/openplayer-setup/payload.zip
+android/build/
+android/dist/
+*.apk
+
+# signing keys and passwords: never publish these
+android/keystore/
+*.p12
+*.jks
+*.keystore
+*.key
+password.txt
+
+# Android build tools (download them, see android/tools/README.md)
+android/tools/*.jar
+android/tools/aapt2
+
+# editors and OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

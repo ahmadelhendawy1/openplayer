@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+:root { --canvas:#070707; --surface:#111111; --text:#fff5df; --muted:#cfc4ae; --accent:#f5d78e; --on-accent:#1a1206; --border:#5a4318;
+  --font:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif; --glass-a:.58; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body { font-family: var(--font); color: var(--text); background: var(--canvas); user-select: none; -webkit-user-select: none; }
+#art { position: fixed; inset: 0; }
+#art svg { width: 100%; height: 100%; display: block; }
+.wash { position: fixed; inset: 0; background:
+  radial-gradient(60% 50% at 50% 55%, color-mix(in srgb, var(--canvas) 30%, transparent), transparent 70%); pointer-events: none; }
+.center { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; }
+.card { width: min(440px, 92vw); padding: 32px 32px 24px; border-radius: 24px; text-align: center;
+  background: color-mix(in srgb, var(--surface) calc(var(--glass-a) * 100%), transparent);
+  backdrop-filter: blur(26px) saturate(150%); -webkit-backdrop-filter: blur(26px) saturate(150%);
+  border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 22%, transparent), 0 24px 60px rgba(0,0,0,.30); }
+.card img { width: 72px; height: 72px; border-radius: 18px; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
+h1 { margin: 16px 0 6px; font-size: 24px; font-weight: 650; letter-spacing: -.2px; }
+p.sub { margin: 0 0 22px; color: var(--muted); font-size: 14.5px; }
+.row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+button { font: inherit; font-size: 14.5px; font-weight: 600; min-height: 48px; padding: 0 22px; border-radius: 14px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 9px; color: var(--text);
+  background: color-mix(in srgb, var(--surface) 55%, transparent); border: 1px solid color-mix(in srgb, var(--text) 22%, transparent); }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 35%, transparent); }
+button:hover { filter: brightness(1.08); }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+button.primary:focus-visible { outline-color: var(--text); }
+button svg { width: 20px; height: 20px; }
+.fine { margin-top: 20px; font-size: 12px; color: var(--muted); letter-spacing: .3px; }
+.hint { margin-top: 6px; font-size: 12px; color: var(--muted); opacity: .85; }
+body.drop .card { outline: 2px dashed var(--accent); outline-offset: 6px; }
+@media (prefers-reduced-motion: no-preference) { .card { animation: in .35s ease-out; } @keyframes in { from { opacity: 0; transform: translateY(6px); } } }
+</style>
+</head>
+<body>
+<div id="art"></div>
+<div class="wash"></div>
+<div class="center">
+  <div class="card" role="dialog" aria-label="Welcome to OpenPlayer">
+    <img id="logo" alt="OpenPlayer">
+    <h1 data-t="Your media. Beautifully simple.">Your media. Beautifully simple.</h1>
+    <p class="sub" data-t="Drop a video or audio file here">Drop a video or audio file here</p>
+    <div class="row">
+      <button class="primary" id="open" title="Open file (Ctrl+O)" data-ti="Open file (Ctrl+O)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 17v-6M9 14l3-3 3 3"/></svg><span data-t="Open file">Open file</span></button>
+      <button id="folder" title="Open folder" data-ti="Open folder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span data-t="Open folder">Open folder</span></button>
+    </div>
+    <div class="fine" data-t="Free · Open source · No ads">Free · Open source · No ads</div>
+    <div class="hint" data-t="Ctrl+O to open · Ctrl+P playlist · F fullscreen">Ctrl+O to open · Ctrl+P playlist · F fullscreen</div>
+  </div>
+</div>
+<script>/*LANDSCAPE*/</script>
+<script>
+window.addEventListener("error", (e) => { try { chrome.webview.postMessage(JSON.stringify({ a: "jserror", v: String(e.message) + " @" + e.lineno })); } catch (x) {} });
+</script>
+<script>
+const send = (o) => window.chrome && chrome.webview ? chrome.webview.postMessage(JSON.stringify(o)) : (window.__sent = (window.__sent || []).concat([o]));
+let L = { t: {} };
+const T = (s) => (L.t && L.t[s]) || s;
+window.OP = {
+  i18n(o) {
+    L = o;
+    document.documentElement.dir = o.dir || "ltr"; document.documentElement.lang = o.lang || "en";
+    document.querySelectorAll("[data-t]").forEach((e) => { e.dataset.en = e.dataset.en || e.textContent; e.textContent = T(e.dataset.en); });
+    document.querySelectorAll("[data-ti]").forEach((e) => (e.title = T(e.dataset.ti)));
+  },
+  theme(t) {
+    const r = document.documentElement.style;
+    for (const [k, v] of Object.entries({ canvas: t.canvas, surface: t.surface, text: t.text, muted: t.muted, accent: t.accent, "on-accent": t.onAccent, border: t.border })) r.setProperty("--" + k, v);
+    r.setProperty("--glass-a", t.id === "high-contrast" ? "1" : t.dark ? ".58" : ".62");
+    document.getElementById("art").innerHTML = window.landscapeSVG ? window.landscapeSVG(t.id) : "";
+  },
+  icon(src) { document.getElementById("logo").src = src; },
+};
+document.getElementById("open").onclick = () => send({ a: "openfile" });
+document.getElementById("folder").onclick = () => send({ a: "openfolder" });
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key.toLowerCase() === "o") { e.preventDefault(); send({ a: "openfile" }); }
+  else if (e.ctrlKey && e.key.toLowerCase() === "p") { e.preventDefault(); send({ a: "key", v: "playlist" }); }
+});
+document.addEventListener("dragenter", () => document.body.classList.add("drop"));
+document.addEventListener("dragleave", (e) => { if (!e.relatedTarget) document.body.classList.remove("drop"); });
+document.addEventListener("drop", (e) => {
+  document.body.classList.remove("drop");
+  const names = [...(e.dataTransfer && e.dataTransfer.files || [])].map((f) => f.name);
+  if (names.length) send({ a: "dropnames", v: names.join("\n") });
+}, true);
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+send({ a: "ready" });
+</script>
+</body>
+</html>

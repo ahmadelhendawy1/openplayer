@@ -4,8 +4,10 @@ package main
 // update). Keep it the same as notes_en / notes_ar in latest.json.
 // Arabic is written in Egyptian colloquial, like the website.
 const (
-	whatsNewDate = "2026-11-18"
-	whatsNewEN   = `OpenPlayer remembers where you stopped: open it again and your last video is waiting at the same moment
+	whatsNewDate = "2026-11-23"
+	whatsNewEN   = `Fixed: some videos (with 32 kHz or 16 kHz sound, like many phone and WhatsApp videos) played with no voice when the equalizer was on
+Clicking the video now pauses and plays instantly
+OpenPlayer remembers where you stopped: open it again and your last video is waiting at the same moment
 When you continue a video it goes back 5 seconds so you remember what was happening (change it in Tools › Options)
 The timeline shows time played on the left, and time left / total length on the right
 When a video ends, press Play to watch it again from the beginning
@@ -14,7 +16,9 @@ Click the video once to pause, click again to play
 Double-click the video to go full screen, double-click again to leave full screen
 In full screen the controls hide by themselves after 3 seconds when paused
 Help menu: What's New, Check for Updates, website and email support`
-	whatsNewAR = `بقى OpenPlayer بيفتكر انت وقفت فين: افتحه تاني وهتلاقي آخر فيديو مستنيك عند نفس اللحظة
+	whatsNewAR = `اتصلّحت مشكلة إن بعض الفيديوهات (زي فيديوهات الموبايل والواتساب) كانت بتشتغل من غير صوت لما الإكولايزر يكون شغّال
+الدوسة على الفيديو بقت بتوقف وتشغّل فورًا
+بقى OpenPlayer بيفتكر انت وقفت فين: افتحه تاني وهتلاقي آخر فيديو مستنيك عند نفس اللحظة
 لما تكمّل فيديو بيرجع 5 ثواني لورا عشان تفتكر كنت فين (تقدر تغيرها من الأدوات › الخيارات)
 شريط الوقت بيعرض اللي اتشغّل على الشمال، والباقي / المدة الكاملة على اليمين
 لما الفيديو يخلص، دوس تشغيل وهيبدأ من الأول

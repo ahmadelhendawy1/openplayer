@@ -18,19 +18,21 @@ func newTestSorter() (*clickSorter, *int32, *int32) {
 func TestSingleClickPauses(t *testing.T) {
 	c, s, d := newTestSorter()
 	c.click()
-	time.Sleep(150 * time.Millisecond)
 	if atomic.LoadInt32(s) != 1 || atomic.LoadInt32(d) != 0 {
 		t.Fatalf("single=%d double=%d", atomic.LoadInt32(s), atomic.LoadInt32(d))
 	}
 }
 
-func TestDoubleClickOnlyFullscreen(t *testing.T) {
+func TestDoubleClick(t *testing.T) {
 	c, s, d := newTestSorter()
-	c.click()
+	c.click() // pauses at once
+	if atomic.LoadInt32(s) != 1 {
+		t.Fatal("single click must act immediately")
+	}
 	time.Sleep(30 * time.Millisecond)
-	c.click()
+	c.click() // double: undo + full screen
 	time.Sleep(150 * time.Millisecond)
-	if atomic.LoadInt32(s) != 0 || atomic.LoadInt32(d) != 1 {
+	if atomic.LoadInt32(s) != 1 || atomic.LoadInt32(d) != 1 {
 		t.Fatalf("single=%d double=%d", atomic.LoadInt32(s), atomic.LoadInt32(d))
 	}
 }
@@ -53,7 +55,7 @@ func TestDoubleThenSingle(t *testing.T) {
 	time.Sleep(150 * time.Millisecond)
 	c.click() // later single: pause
 	time.Sleep(150 * time.Millisecond)
-	if atomic.LoadInt32(s) != 1 || atomic.LoadInt32(d) != 1 {
+	if atomic.LoadInt32(s) != 2 || atomic.LoadInt32(d) != 1 {
 		t.Fatalf("single=%d double=%d", atomic.LoadInt32(s), atomic.LoadInt32(d))
 	}
 }

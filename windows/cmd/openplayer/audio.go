@@ -88,6 +88,17 @@ func (f audioFX) filter() string {
 		parts = append(parts, "dynaudnorm@norm=f=150:g=15:p=0.95:m=10")
 	}
 	if f.EQ {
+		eq := false
+		for _, g := range f.Bands {
+			eq = eq || g != 0
+		}
+		if eq {
+			// An equalizer band at or above half the sample rate silences
+			// the audio (the 16 kHz band on 32 kHz audio, the 8 kHz band on
+			// 16 kHz voice recordings). Resampling to 48 kHz first keeps
+			// every band valid for any file.
+			parts = append(parts, "aresample@sr=48000")
+		}
 		if f.Pre != 0 {
 			parts = append(parts, fmt.Sprintf("volume@pre=volume=%sdB", fnum(f.Pre)))
 			boost = boost || f.Pre > 0

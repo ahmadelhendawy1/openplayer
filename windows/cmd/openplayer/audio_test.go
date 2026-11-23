@@ -20,7 +20,7 @@ func TestFilterChain(t *testing.T) {
 	f := audioFX{EQ: true, Pre: -3, Norm: true, Amp: 500}
 	f.Bands[0], f.Bands[9] = 6, -2.5
 	got := f.filter()
-	want := "@op:lavfi=[dynaudnorm@norm=f=150:g=15:p=0.95:m=10,volume@pre=volume=-3dB,equalizer@b0=f=31:t=o:w=1:g=6,equalizer@b9=f=16000:t=o:w=1:g=-2.5,volume@amp=volume=5,alimiter@lim=limit=0.98:attack=5:release=50:level=disabled]"
+	want := "@op:lavfi=[dynaudnorm@norm=f=150:g=15:p=0.95:m=10,aresample@sr=48000,volume@pre=volume=-3dB,equalizer@b0=f=31:t=o:w=1:g=6,equalizer@b9=f=16000:t=o:w=1:g=-2.5,volume@amp=volume=5,alimiter@lim=limit=0.98:attack=5:release=50:level=disabled]"
 	if got != want {
 		t.Fatalf("got  %s\nwant %s", got, want)
 	}

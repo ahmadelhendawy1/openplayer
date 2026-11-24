@@ -20,7 +20,7 @@ import (
 	"unsafe"
 )
 
-const appVersion = "0.9.10"
+const appVersion = "0.9.11"
 
 // Set at build time: -ldflags "-X main.pubKey=<base64 ed25519 public key>"
 var pubKey string
@@ -403,6 +403,9 @@ func main() {
 		{"vo", "gpu-next,gpu"}, {"hwdec", "auto-safe"},
 		{"keep-open", "yes"}, {"force-window", "yes"}, {"idle", "yes"},
 		{"save-position-on-quit", "yes"}, {"volume-max", "130"},
+		// Never save the sound chain with a file's position: the equalizer
+		// is a player-wide setting, and an old saved chain would come back.
+		{"watch-later-options-remove", "af"},
 		{"sub-auto", "fuzzy"}, {"audio-file-auto", "fuzzy"}, {"audio-display", "embedded-first"},
 		{"sub-font", "Segoe UI"}, {"screenshot-directory", "~~desktop/"},
 		{"cursor-autohide", "1500"},

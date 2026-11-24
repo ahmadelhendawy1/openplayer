@@ -82,8 +82,16 @@ func restoreSession() bool {
 	return true
 }
 
+// currentAF is the sound chain OpenPlayer wants right now (set by applyFX).
+var currentAF atomic.Value
+
 // resumeOnLoad runs on the mpv event goroutine when a file has loaded.
 func resumeOnLoad() {
+	// A file's saved settings from older versions may carry an old sound
+	// chain ("af"); put the current equalizer / amplifier back.
+	if af, ok := currentAF.Load().(string); ok {
+		mpv.Async(mp, "set", "af", af)
+	}
 	pos, _ := strconv.ParseFloat(mpv.GetString(mp, "time-pos"), 64)
 	dur, _ := strconv.ParseFloat(mpv.GetString(mp, "duration"), 64)
 	rw, _ := strconv.ParseFloat(cfg.get("resume_rewind", "5"), 64)

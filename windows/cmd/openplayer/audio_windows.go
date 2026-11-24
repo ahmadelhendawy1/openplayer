@@ -54,7 +54,9 @@ func loadFX() { fx = decodeFX(cfg.get("audio_fx", "")) }
 // applyFX sends the filter graph to mpv (only when it changed) and updates
 // the menus and the widget. save=true also stores it as the preference.
 func applyFX(save bool) {
-	if af := fx.filter(); af != lastAF {
+	af := fx.filter()
+	currentAF.Store(af)
+	if af != lastAF {
 		lastAF = af
 		mpv.Async(mp, "set", "af", af)
 	}
@@ -138,6 +140,7 @@ func eqMessage(a string, v json.RawMessage) {
 		}
 		if af := fx.filter(); af != lastAF { // live while dragging; saved on "commit"
 			lastAF = af
+			currentAF.Store(af)
 			mpv.Async(mp, "set", "af", af)
 		}
 	case "commit":
@@ -154,6 +157,7 @@ func eqMessage(a string, v json.RawMessage) {
 			fx.Amp = clampAmp(n)
 			if af := fx.filter(); af != lastAF {
 				lastAF = af
+				currentAF.Store(af)
 				mpv.Async(mp, "set", "af", af)
 			}
 		}

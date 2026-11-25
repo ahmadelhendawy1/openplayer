@@ -20,7 +20,7 @@ import (
 	"unsafe"
 )
 
-const appVersion = "0.9.11"
+const appVersion = "0.9.12"
 
 // Set at build time: -ldflags "-X main.pubKey=<base64 ed25519 public key>"
 var pubKey string
@@ -406,6 +406,9 @@ func main() {
 		// Never save the sound chain with a file's position: the equalizer
 		// is a player-wide setting, and an old saved chain would come back.
 		{"watch-later-options-remove", "af"},
+		// One volume for all videos (volume_windows.go), never per file.
+		{"watch-later-options-remove", "volume"}, {"watch-later-options-remove", "mute"},
+		{"volume", startVolume()},
 		{"sub-auto", "fuzzy"}, {"audio-file-auto", "fuzzy"}, {"audio-display", "embedded-first"},
 		{"sub-font", "Segoe UI"}, {"screenshot-directory", "~~desktop/"},
 		{"cursor-autohide", "1500"},
@@ -431,7 +434,7 @@ func main() {
 	refreshAllChecks()
 	_ = mpv.Observe(mp, "fullscreen", fmtFlag)
 	_ = mpv.Observe(mp, "media-title", fmtString)
-	for _, prop := range []string{"playlist", "track-list", "chapter-list", "chapter", "speed", "idle-active", "osd-dimensions", "pause", "audio-device-list", "eof-reached"} {
+	for _, prop := range []string{"playlist", "track-list", "chapter-list", "chapter", "speed", "idle-active", "osd-dimensions", "pause", "audio-device-list", "eof-reached", "volume"} {
 		_ = mpv.Observe(mp, prop, fmtString) // node properties arrive as JSON text
 	}
 
@@ -475,8 +478,13 @@ func main() {
 					if name == "eof-reached" {
 						onEOFReached(propString(val))
 					}
+				case "volume":
+					onVolumeProp(propString(val))
 				}
+			case 6: // MPV_EVENT_START_FILE
+				onStartFile()
 			case 8: // MPV_EVENT_FILE_LOADED
+				onFileLoadedVolume()
 				onFileLoaded()
 			case 7: // MPV_EVENT_END_FILE: log files that fail to play
 				if ev.Data != 0 {
@@ -527,6 +535,7 @@ func main() {
 		pDispatchMessageW.Call(uintptr(unsafe.Pointer(&m)))
 	}
 	saveSession()
+	saveVolumeNow()
 	closing.Store(true)
 	<-done
 	mpv.Destroy(mp) // also saves the position of the playing file (save-position-on-quit)

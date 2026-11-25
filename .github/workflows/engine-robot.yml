@@ -101,13 +101,14 @@ jobs:
           for p in windows/third_party/uosc-patches/*.patch; do (cd skin && patch -s -p2 < "../$p"); done
       - name: Test — every file must play with sound through OpenPlayer's audio chain
         shell: bash
-        run: python windows/scripts/engine-test.py candidate/libmpv-2.dll windows/engine/testmedia skin/uosc | tee test-result.txt
+        run: |
+          set -o pipefail
+          python windows/scripts/engine-test.py candidate/libmpv-2.dll windows/engine/testmedia skin/uosc | tee candidate/test-result.txt
+      # the artifact holds libmpv-2.dll and test-result.txt at its top level
       - uses: actions/upload-artifact@v4
         with:
           name: candidate
-          path: |
-            candidate/libmpv-2.dll
-            test-result.txt
+          path: candidate/
           retention-days: 7
 
   publish:
@@ -116,7 +117,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
-        with: { go-version-file: windows/go.mod }
+        with: { go-version-file: windows/go.mod, cache: false }
       - uses: actions/download-artifact@v4
         with: { name: candidate, path: candidate }
       - name: Get the pinned on-screen controls
@@ -129,6 +130,7 @@ jobs:
           set -euo pipefail
           if [ -z "$ENGINE_SIGNING_KEY" ]; then echo "::error::The ENGINE_SIGNING_KEY repository secret is missing (Settings › Secrets and variables › Actions)."; exit 1; fi
           umask 077; printf '%s\n' "$ENGINE_SIGNING_KEY" > "$RUNNER_TEMP/engine.key"
+          ls -la candidate
           (cd windows && GOFLAGS=-mod=mod scripts/make-engine-pack.sh ../candidate/libmpv-2.dll ../uosc \
               "${{ needs.find.outputs.date }}" "${{ needs.find.outputs.git }}" "$RUNNER_TEMP/engine.key" ../release) | tee pack.txt
           rm -f "$RUNNER_TEMP/engine.key"

@@ -96,6 +96,7 @@ const (
 	idmLangEn
 	idmLangAr
 	idmWhatsNew
+	idmReportBug
 	idmWebsite
 	idmSupport
 	idmFirstMpv = 1000 // ids >= this map to mpvMenu entries
@@ -290,6 +291,7 @@ func helpMenu() uintptr {
 	addItem(m, idmCheckUpdates, "Check for &Updates...")
 	addSep(m)
 	addItem(m, idmWebsite, "OpenPlayer &Website (ai4edutech.com)")
+	addItem(m, idmReportBug, "&Report a Bug...")
 	addItem(m, idmSupport, "Email &Support...")
 	addSep(m)
 	addItem(m, idmAbout, "&About OpenPlayer")
@@ -427,6 +429,8 @@ func handleCommand(id int) {
 			T("Engine: libmpv (LGPL build) with FFmpeg.")+"\n"+T("On-screen controls: uosc (LGPL-2.1)."))
 	case id == idmWhatsNew:
 		showWhatsNew()
+	case id == idmReportBug:
+		showBugReport()
 	case id == idmWebsite:
 		openPath(websiteURL)
 	case id == idmSupport:

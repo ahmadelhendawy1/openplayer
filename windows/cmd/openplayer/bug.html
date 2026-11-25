@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+:root { --canvas:#0e0b07; --surface:#120d07; --text:#f6ead4; --muted:#bfae8e; --accent:#f5b942; --on-accent:#1a1206; --match:#ffcf6b; --border:#5a4318;
+  --font:"Segoe UI Variable Text","Segoe UI",Tahoma,system-ui,sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--font); color: var(--text); font-size: 14px; overflow: hidden; display: flex; flex-direction: column;
+  background:
+    radial-gradient(70% 55% at 100% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%),
+    radial-gradient(60% 50% at 0% 100%, color-mix(in srgb, var(--match) 10%, transparent), transparent 70%),
+    var(--canvas); }
+.top { display: flex; gap: 14px; align-items: center; padding: 20px 24px 6px; }
+.badge { width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; flex: none; background: var(--accent); color: var(--on-accent); }
+.badge svg { width: 26px; height: 26px; }
+h1 { margin: 0; font-size: 19px; }
+.sub { color: var(--muted); margin-top: 3px; font-size: 13px; }
+form { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 24px 0; display: grid; gap: 12px; align-content: start; }
+label { display: grid; gap: 5px; font-weight: 600; font-size: 13px; }
+label small { font-weight: 400; color: var(--muted); }
+textarea, input[type=email] { font: inherit; color: var(--text); background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: 11px; padding: 9px 11px; width: 100%; }
+textarea { resize: vertical; min-height: 88px; }
+textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.check { display: flex; gap: 9px; align-items: flex-start; font-weight: 500; }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+.auto { border-radius: 12px; padding: 10px 14px; font-size: 12.5px; color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 70%, transparent); border: 1px dashed color-mix(in srgb, var(--border) 60%, transparent); }
+.auto b { color: var(--text); font-weight: 600; }
+.auto ul { margin: 6px 0 0; padding-inline-start: 18px; }
+.msg { margin: 0 24px; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; display: none; }
+.msg.err { display: block; background: color-mix(in srgb, #ff6b81 16%, transparent); border: 1px solid color-mix(in srgb, #ff6b81 40%, transparent); }
+.done { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 24px; }
+.done .num { font-size: 26px; font-weight: 800; color: var(--accent); letter-spacing: .5px; direction: ltr; }
+body.sent form, body.sent .btns .send { display: none; }
+body.sent .done { display: flex; }
+.btns { display: flex; gap: 10px; padding: 14px 24px 18px; align-items: center; flex-wrap: wrap; }
+.btns .sp { flex: 1; }
+button { font: inherit; font-weight: 650; padding: 10px 18px; border-radius: 11px; cursor: pointer; color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent); background: color-mix(in srgb, var(--surface) 80%, transparent); }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+button:disabled { opacity: .55; cursor: default; }
+.link { background: none; border: 0; color: var(--muted); padding: 10px 2px; text-decoration: underline; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.9 1.9M16 2l-1.9 1.9M9 7.1a3 3 0 0 1 6 0v1H9z"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v3c0 3.3-2.7 6-6 6zM12 20v-9M6 13H2M22 13h-4M6.5 8.5 4 7M17.5 8.5 20 7M6 17l-2.5 1.5M18 17l2.5 1.5"/></svg></div>
+  <div><h1 data-t="Report a bug"></h1><div class="sub" data-t="Tell us what went wrong. Your report goes privately to the OpenPlayer developer."></div></div>
+</div>
+<form id="f" autocomplete="off">
+  <label><span data-t="What went wrong?"></span>
+    <textarea id="what" dir="auto" maxlength="4000" required></textarea></label>
+  <label><span data-t="How can we see it happen? (optional)"></span><small data-t="For example: open a WhatsApp video, turn the equalizer on, there is no sound."></small>
+    <textarea id="steps" dir="auto" maxlength="4000" style="min-height:64px"></textarea></label>
+  <label><span data-t="Your email (optional)"></span><small data-t="Only if you would like an answer. It is never shown publicly."></small>
+    <input id="email" type="email" maxlength="200" dir="ltr"></label>
+  <label class="check"><input type="checkbox" id="log"><span><span data-t="Include the player's technical log"></span><br><small data-t="It helps find the cause. It may contain the names of files you played."></small></span></label>
+  <div class="auto"><b data-t="Sent automatically:"></b><ul id="autoList"></ul></div>
+</form>
+<div class="done">
+  <div data-t="Thank you! Your report was sent."></div>
+  <div class="num" id="num"></div>
+  <div class="sub" data-t="Keep this number if you write to us about it."></div>
+</div>
+<div class="msg" id="msg"></div>
+<div class="btns">
+  <button type="button" class="link" id="gh" data-t="Report on GitHub instead"></button>
+  <span class="sp"></span>
+  <button type="button" id="close" data-t="Close"></button>
+  <button type="button" class="primary send" id="send" data-t="Send report"></button>
+</div>
+<script>
+window.addEventListener("error", (e) => { try { chrome.webview.postMessage(JSON.stringify({ a: "jserror", v: String(e.message) + " @" + e.lineno })); } catch (x) {} });
+</script>
+<script>
+const send = (o) => window.chrome && chrome.webview ? chrome.webview.postMessage(JSON.stringify(o)) : (window.__sent = (window.__sent || []).concat([o]));
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let L = { t: {} }, INFO = {};
+const T = (s) => (L.t && L.t[s]) || s;
+function render() {
+  document.documentElement.dir = L.dir || "ltr"; document.documentElement.lang = L.lang || "en";
+  document.querySelectorAll("[data-t]").forEach((e) => (e.textContent = T(e.dataset.t)));
+  const items = [T("OpenPlayer version") + ": " + (INFO.version || ""), T("Windows version") + ": " + (INFO.os || "")];
+  if (INFO.media) items.push(T("Format of the video playing now (not its name)") + ": " + INFO.media);
+  $("autoList").innerHTML = items.map((i) => `<li dir="auto">${esc(i)}</li>`).join("");
+}
+function report() {
+  return { what: $("what").value.trim(), steps: $("steps").value.trim(), email: $("email").value.trim(), includeLog: $("log").checked };
+}
+function error(text) { const m = $("msg"); m.textContent = text; m.className = "msg err"; }
+window.OP = {
+  i18n(o) { L = o; render(); },
+  theme(t) {
+    const r = document.documentElement.style;
+    for (const [k, v] of Object.entries({ canvas: t.canvas, surface: t.surface, text: t.text, muted: t.muted, accent: t.accent, "on-accent": t.onAccent, match: t.match, border: t.border })) r.setProperty("--" + k, v);
+  },
+  info(o) { INFO = o; render(); },
+  sent(r) {
+    $("send").disabled = false; $("send").textContent = T("Send report");
+    if (r && r.id) { document.body.classList.add("sent"); $("num").textContent = r.id; $("msg").className = "msg"; }
+    else error(T("The report could not be sent:") + " " + ((r && r.error) || "") + " " + T("You can try again, or use Report on GitHub instead."));
+  },
+};
+$("send").onclick = () => {
+  const r = report();
+  if (r.what.length < 3) { error(T("Please describe the problem first.")); $("what").focus(); return; }
+  if (r.email && !$("email").checkValidity()) { error(T("Please check your email address.")); $("email").focus(); return; }
+  $("msg").className = "msg"; $("send").disabled = true; $("send").textContent = T("Sending…");
+  send({ a: "send", v: r });
+};
+$("gh").onclick = () => send({ a: "github", v: report() });
+$("close").onclick = () => send({ a: "close" });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") send({ a: "close" }); });
+send({ a: "ready" });
+</script>
+</body>
+</html>

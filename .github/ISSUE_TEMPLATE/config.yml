@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report privately from the player
+    url: https://ai4edutech.com/apps/openplayer/
+    about: In OpenPlayer choose Help › Report a Bug… — no GitHub account needed, and your report stays private.
+  - name: Email support
+    url: mailto:support@ai4edutech.com
+    about: Questions and help with OpenPlayer.

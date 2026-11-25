@@ -20,7 +20,7 @@ import (
 	"unsafe"
 )
 
-const appVersion = "0.9.12"
+const appVersion = "0.9.13"
 
 // Set at build time: -ldflags "-X main.pubKey=<base64 ed25519 public key>"
 var pubKey string
@@ -178,6 +178,9 @@ func wndProc(hwnd, m, wp, lp uintptr) uintptr {
 		return 0
 	case wmAppUpdDone:
 		onUpdateDone(wp == 1)
+		return 0
+	case wmAppBugDone:
+		onBugDone()
 		return 0
 	case wmAppThumb:
 		sendReadyThumbs()

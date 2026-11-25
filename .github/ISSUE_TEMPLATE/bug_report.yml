@@ -1,0 +1,54 @@
+name: Bug report
+description: Something in OpenPlayer does not work as it should
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make OpenPlayer better. You can also report from inside the player: **Help › Report a Bug…** (no GitHub account needed).
+  - type: textarea
+    id: what
+    attributes:
+      label: What went wrong?
+      description: What happened, and what did you expect instead?
+      placeholder: "Example: the video plays but there is no sound when the equalizer is on."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a video recorded on a phone
+        2. Turn the equalizer on
+        3. No sound
+  - type: input
+    id: version
+    attributes:
+      label: OpenPlayer version
+      description: Help › About OpenPlayer
+      placeholder: "0.9.13"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows 11
+        - Windows 10
+        - Android
+    validations:
+      required: true
+  - type: input
+    id: media
+    attributes:
+      label: File format (if the problem is with one file)
+      description: For example mp4 · h264 · aac 32000 Hz. Please do not upload private videos.
+  - type: textarea
+    id: log
+    attributes:
+      label: Log (optional)
+      description: "%LOCALAPPDATA%\\OpenPlayer\\openplayer.log (remove anything private before pasting)"
+      render: text

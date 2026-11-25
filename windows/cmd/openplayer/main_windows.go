@@ -20,7 +20,7 @@ import (
 	"unsafe"
 )
 
-const appVersion = "0.9.13"
+const appVersion = "0.9.14"
 
 // Set at build time: -ldflags "-X main.pubKey=<base64 ed25519 public key>"
 var pubKey string

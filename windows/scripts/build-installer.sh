@@ -12,18 +12,33 @@ export GOOS=windows GOARCH=amd64 CGO_ENABLED=0 GOFLAGS=-mod=mod GOPROXY=off
 
 rm -rf "$STAGE"; mkdir -p "$STAGE/engine/skin/fonts" "$STAGE/config/fonts" "$STAGE/config/script-opts" "$STAGE/licenses"
 ( cd "$ROOT"
-  go build -trimpath -ldflags "-s -w -H windowsgui" -o "$STAGE/openplayer.exe" ./cmd/openplayer
+  # automatic codec updates: where the signed engine packs are published, and the key that must have signed them
+  ENGINE_PUB=$(cat "${OPENPLAYER_ENGINE_PUB:-$ROOT/engine/engine.pub}")
+  go build -trimpath -ldflags "-s -w -H windowsgui -X main.updateURL=https://github.com/ahmadelhendawy1/openplayer/releases/download/engine -X main.pubKey=$ENGINE_PUB" -o "$STAGE/openplayer.exe" ./cmd/openplayer
   go build -trimpath -ldflags "-s -w" -o "$STAGE/enginectl.exe" ./cmd/enginectl )
 
-cp "$ENGINE_DLL" "$STAGE/engine/libmpv-2.dll"
-# On-screen controls live with the engine so the updater can refresh them;
-# the fonts are also copied to config\fonts as a fallback for older engines.
-cp -r "$UOSC/src/uosc" "$STAGE/engine/skin/uosc"
-# OpenPlayer changes to uosc (time display), kept as patches so uosc can be updated
-for p in "$ROOT"/third_party/uosc-patches/*.patch; do
-  ( cd "$STAGE/engine/skin" && patch -s -p2 < "$p" ) || { echo "uosc patch failed: $p"; exit 1; }
-done
-cp "$UOSC"/src/fonts/* "$STAGE/engine/skin/fonts/"
+# The engine folder (libmpv + patched uosc controls + fonts) is built as a
+# signed engine pack, exactly like the automatic codec updates, so the player
+# knows which engine it has and only downloads what changes.
+ENGINE_KEY="${OPENPLAYER_ENGINE_KEY:-$ROOT/../openplayer-keys/engine.key}"
+[ -f "$ENGINE_KEY" ] || { echo "engine signing key not found: $ENGINE_KEY (set OPENPLAYER_ENGINE_KEY)"; exit 1; }
+BDATE=$(python3 -c "import json;print(json.load(open('$ROOT/engine/engine.json'))['bundled_date'])")
+BGIT=$(python3 -c "import json;print(json.load(open('$ROOT/engine/engine.json'))['bundled_git'])")
+PACK="$ROOT/build/engine-pack"
+( unset GOOS GOARCH; "$ROOT/scripts/make-engine-pack.sh" "$ENGINE_DLL" "$UOSC" "$BDATE" "$BGIT" "$ENGINE_KEY" "$PACK" )
+python3 - "$PACK" "$STAGE/engine" <<'PY'
+import json, os, shutil, sys
+pack, dst = sys.argv[1], sys.argv[2]
+m = json.load(open(os.path.join(pack, "manifest.json")))
+for c in m["components"]:
+    out = os.path.join(dst, *c["path"].split("/"))
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    shutil.copyfile(os.path.join(pack, "files", c["sha256"]), out)
+for f in ("manifest.json", "manifest.json.sig"):
+    shutil.copyfile(os.path.join(pack, f), os.path.join(dst, f))
+print("engine: %s (serial %d, %d files)" % (m["engine_version"], m["serial"], len(m["components"])))
+PY
+# fonts also in config\fonts as a fallback for older engines
 cp "$UOSC"/src/fonts/* "$STAGE/config/fonts/"
 cp "$ROOT/config/input.conf" "$ROOT/config/openplayer-text.json" "$ROOT/config/uosc-ar.json" "$STAGE/config/"
 cp "$ROOT/config/script-opts/uosc.conf" "$STAGE/config/script-opts/"

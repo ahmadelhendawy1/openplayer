@@ -66,6 +66,14 @@ type latestInfo struct {
 	NotesEN string  `json:"notes_en"`
 	NotesAR string  `json:"notes_ar"`
 	Force   bool    `json:"force"` // important update: ask at every start ("Later" lasts one session)
+	// MinSupported: versions older than this are obsolete; they are asked to
+	// update at every start, like Force, and the window says so.
+	MinSupported string `json:"min_supported"`
+}
+
+// obsolete reports whether this running version is below min_supported.
+func (l latestInfo) obsolete(current string) bool {
+	return versionParts(l.MinSupported) != nil && isNewer(l.MinSupported, current)
 }
 
 // parseLatest validates latest.json. The link must be https and the notes
@@ -86,6 +94,9 @@ func parseLatest(b []byte) (latestInfo, bool) {
 		l.SHA256 = ""
 	}
 	l.SHA256 = strings.ToLower(l.SHA256)
+	if versionParts(l.MinSupported) == nil {
+		l.MinSupported = ""
+	}
 	return l, true
 }
 

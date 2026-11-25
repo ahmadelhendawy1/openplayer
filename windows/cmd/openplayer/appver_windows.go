@@ -98,6 +98,9 @@ func checkAppVersion(interactive bool) {
 		return
 	}
 	newer := isNewer(l.Version, appVersion)
+	if l.obsolete(appVersion) {
+		l.Force = true // no longer supported: ask at every start
+	}
 	logf("version check: latest %s, this is %s (newer=%v)", l.Version, appVersion, newer)
 	updMu.Lock()
 	updLatest, updHave = l, true
@@ -207,7 +210,7 @@ func pushUpdate() {
 		size = strconv.FormatFloat(l.SizeMB, 'f', 1, 64)
 	}
 	b, _ := json.Marshal(map[string]any{"newer": isNewer(l.Version, appVersion), "current": appVersion, "version": l.Version,
-		"date": date, "size": size, "notes": notesList(notes), "canSelf": l.canSelfUpdate()})
+		"date": date, "size": size, "notes": notesList(notes), "canSelf": l.canSelfUpdate(), "obsolete": l.obsolete(appVersion)})
 	updWin.eval("OP.data(" + string(b) + ")")
 }
 

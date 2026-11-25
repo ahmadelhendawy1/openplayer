@@ -23,3 +23,6 @@ android/tools/aapt2
 .idea/
 Thumbs.db
 .DS_Store
+
+# python
+__pycache__/

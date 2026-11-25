@@ -59,3 +59,17 @@ func TestForceFlag(t *testing.T) {
 		t.Fatal("force should default to false")
 	}
 }
+
+func TestMinSupported(t *testing.T) {
+	l, ok := parseLatest([]byte(`{"version":"0.9.14","url":"https://ai4edutech.com/apps/openplayer/","min_supported":"0.9.10"}`))
+	if !ok || l.MinSupported != "0.9.10" {
+		t.Fatalf("parse: %v %+v", ok, l)
+	}
+	if !l.obsolete("0.9.9") || l.obsolete("0.9.10") || l.obsolete("0.9.13") {
+		t.Fatal("obsolete check wrong")
+	}
+	l2, _ := parseLatest([]byte(`{"version":"0.9.14","url":"https://x.y/","min_supported":"soon"}`))
+	if l2.obsolete("0.1.0") {
+		t.Fatal("a bad min_supported must be ignored")
+	}
+}

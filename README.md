@@ -16,6 +16,7 @@ interface, 11 themes and a full Arabic interface, with no ads, no tracking and n
 - Time display shows time played, time left and total length (for example `00:23` … `-00:19 / 00:42`)
 - English and Arabic (right-to-left) interface
 - Help menu with What's New, Check for Updates, website and email support
+- Automatic codec updates: a weekly robot tests and signs new engine builds; players install them by themselves
 - Built-in update check that shows what's new; the download is verified with SHA-256 before it installs
 
 ## Repository

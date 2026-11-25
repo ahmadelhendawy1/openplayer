@@ -1,0 +1,178 @@
+# OpenPlayer engine robot — automatic codec updates.
+#
+# Every week (and on demand from the Actions tab) it:
+#   1. looks for a newer LGPL libmpv build (FFmpeg + codecs inside) from the
+#      builder OpenPlayer uses (see windows/engine/engine.json),
+#   2. checks its license configuration,
+#   3. TESTS it on Windows: every file in windows/engine/testmedia must open,
+#      play and give real sound through OpenPlayer's full audio chain, and the
+#      on-screen controls must load,
+#   4. signs it with the engine key (repository secret ENGINE_SIGNING_KEY),
+#   5. publishes it to the release tagged "engine". Every OpenPlayer checks
+#      that release once a day and installs a new engine on its next start.
+# If any step fails, nothing is published and an issue is opened.
+name: engine-robot
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"          # Mondays 03:17 UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Publish even if the newest build is already published"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: engine-robot
+  cancel-in-progress: false
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    outputs:
+      needed: ${{ steps.pick.outputs.needed }}
+      tag: ${{ steps.pick.outputs.tag }}
+      asset: ${{ steps.pick.outputs.asset }}
+      date: ${{ steps.pick.outputs.date }}
+      git: ${{ steps.pick.outputs.git }}
+      serial: ${{ steps.pick.outputs.serial }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find the newest engine build
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          cfg=windows/engine/engine.json
+          repo=$(jq -r .libmpv_repo "$cfg"); pattern=$(jq -r .libmpv_asset "$cfg")
+          rev=$(jq -r .uosc_rev "$cfg"); tag_out=$(jq -r .release_tag "$cfg")
+          gh api "repos/$repo/releases?per_page=15" > releases.json
+          # newest release that has the LGPL 64-bit development package
+          read -r tag asset < <(jq -r --arg re "$pattern" \
+            '[.[] | select(.draft|not) | select(.prerelease|not) | {t:.tag_name, a:([.assets[].name | select(test($re))][0])} | select(.a != null)][0] | "\(.t) \(.a)"' releases.json)
+          if [ -z "${asset:-}" ] || [ "$asset" = "null" ]; then echo "::error::no LGPL libmpv package found in $repo"; exit 1; fi
+          date=$(jq -rn --arg re "$pattern" --arg a "$asset" '$a | match($re).captures[0].string')
+          git=$(jq -rn --arg re "$pattern" --arg a "$asset" '$a | match($re).captures[1].string')
+          serial=$(( 10#$date * 100 + rev ))
+          current=$(curl -fsSL "https://github.com/${{ github.repository }}/releases/download/$tag_out/manifest.json" | jq -r .serial || echo 0)
+          echo "newest: $asset (serial $serial), published: ${current:-0}"
+          needed=false
+          if [ "$serial" -gt "${current:-0}" ] || [ "$FORCE" = "true" ]; then needed=true; fi
+          { echo "needed=$needed"; echo "tag=$tag"; echo "asset=$asset"; echo "date=$date"; echo "git=$git"; echo "serial=$serial"; } >> "$GITHUB_OUTPUT"
+          { echo "### Engine robot"; echo "- newest build: \`$asset\`"; echo "- published serial: ${current:-none}, candidate: $serial"; echo "- update needed: **$needed**"; } >> "$GITHUB_STEP_SUMMARY"
+
+  test:
+    needs: find
+    if: needs.find.outputs.needed == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Download the candidate engine
+        shell: bash
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          set -euo pipefail
+          repo=$(jq -r .libmpv_repo windows/engine/engine.json)
+          gh release download "${{ needs.find.outputs.tag }}" -R "$repo" -p "${{ needs.find.outputs.asset }}" -D dl
+          7z x -y -odl/x "dl/${{ needs.find.outputs.asset }}" > /dev/null
+          dll=$(find dl/x -iname 'libmpv-2.dll' | head -1)
+          [ -n "$dll" ] || { echo "::error::libmpv-2.dll not found in the package"; exit 1; }
+          mkdir -p candidate && cp "$dll" candidate/libmpv-2.dll
+          sha256sum candidate/libmpv-2.dll
+      - name: License gate (LGPL only)
+        shell: bash
+        run: windows/scripts/license-gate.sh candidate
+      - name: Get the pinned on-screen controls and apply OpenPlayer's patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          commit=$(jq -r .uosc_commit windows/engine/engine.json); repo=$(jq -r .uosc_repo windows/engine/engine.json)
+          git init -q uosc && git -C uosc fetch -q --depth 1 "https://github.com/$repo" "$commit" && git -C uosc checkout -q FETCH_HEAD
+          mkdir -p skin && cp -r uosc/src/uosc skin/uosc
+          for p in windows/third_party/uosc-patches/*.patch; do (cd skin && patch -s -p2 < "../$p"); done
+      - name: Test — every file must play with sound through OpenPlayer's audio chain
+        shell: bash
+        run: python windows/scripts/engine-test.py candidate/libmpv-2.dll windows/engine/testmedia skin/uosc | tee test-result.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate
+          path: |
+            candidate/libmpv-2.dll
+            test-result.txt
+          retention-days: 7
+
+  publish:
+    needs: [find, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: windows/go.mod }
+      - uses: actions/download-artifact@v4
+        with: { name: candidate, path: candidate }
+      - name: Get the pinned on-screen controls
+        run: |
+          commit=$(jq -r .uosc_commit windows/engine/engine.json); repo=$(jq -r .uosc_repo windows/engine/engine.json)
+          git init -q uosc && git -C uosc fetch -q --depth 1 "https://github.com/$repo" "$commit" && git -C uosc checkout -q FETCH_HEAD
+      - name: Sign the engine pack
+        env: { ENGINE_SIGNING_KEY: "${{ secrets.ENGINE_SIGNING_KEY }}" }
+        run: |
+          set -euo pipefail
+          if [ -z "$ENGINE_SIGNING_KEY" ]; then echo "::error::The ENGINE_SIGNING_KEY repository secret is missing (Settings › Secrets and variables › Actions)."; exit 1; fi
+          umask 077; printf '%s\n' "$ENGINE_SIGNING_KEY" > "$RUNNER_TEMP/engine.key"
+          (cd windows && GOFLAGS=-mod=mod scripts/make-engine-pack.sh ../candidate/libmpv-2.dll ../uosc \
+              "${{ needs.find.outputs.date }}" "${{ needs.find.outputs.git }}" "$RUNNER_TEMP/engine.key" ../release) | tee pack.txt
+          rm -f "$RUNNER_TEMP/engine.key"
+      - name: Publish to the "engine" release
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          set -euo pipefail
+          tag=$(jq -r .release_tag windows/engine/engine.json)
+          version=$(jq -r .engine_version release/manifest.json); serial=$(jq -r .serial release/manifest.json)
+          notes=$(printf 'Automatic codec update for OpenPlayer — installed by the player itself; nothing to download here.\n\n**Engine:** %s\n**Serial:** %s\n**Source:** %s\n\n```\n%s\n```\n' \
+            "$version" "$serial" "${{ needs.find.outputs.asset }}" "$(cat candidate/test-result.txt)")
+          if ! gh release view "$tag" > /dev/null 2>&1; then
+            gh release create "$tag" --title "OpenPlayer engine (automatic codec updates)" --notes "$notes" --latest=false
+          else
+            gh release edit "$tag" --notes "$notes" --latest=false
+          fi
+          # files first, then the signature and the manifest that point to them
+          gh release upload "$tag" release/files/* --clobber
+          gh release upload "$tag" release/manifest.json.sig release/manifest.json --clobber
+          # remove files no longer used, once they are a week old (players mid-download keep working)
+          keep=$(jq -r '.components[].sha256' release/manifest.json)
+          gh api "repos/${{ github.repository }}/releases/tags/$tag" --jq '.assets[] | "\(.id) \(.name) \(.created_at)"' |
+          while read -r id name created; do
+            case "$name" in manifest.json|manifest.json.sig) continue;; esac
+            grep -qx "$name" <<<"$keep" && continue
+            if [ $(( $(date +%s) - $(date -d "$created" +%s) )) -gt 604800 ]; then
+              gh api -X DELETE "repos/${{ github.repository }}/releases/assets/$id" && echo "removed old file $name"
+            fi
+          done
+          { echo "### Published"; echo "- $version (serial $serial)"; } >> "$GITHUB_STEP_SUMMARY"
+
+  report-failure:
+    needs: [find, test, publish]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open an issue
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh issue create -R "${{ github.repository }}" --label bug \
+            --title "Engine robot: update not published ($(date -u +%Y-%m-%d))" \
+            --body "The weekly codec update was **not** published, so nobody received it. Users keep the working engine they have.
+
+          Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Newest build checked: \`${{ needs.find.outputs.asset }}\`" || \
+          gh issue create -R "${{ github.repository }}" --title "Engine robot: update not published" --body "See ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

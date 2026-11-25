@@ -354,6 +354,7 @@
  "The update could not be downloaded:": "تعذّر تنزيل التحديث:",
  "Theme": "السمة",
  "This build has no update server configured yet.\n\nAutomatic component updates start working once the OpenPlayer release repository is published.": "لم يُضبط خادم تحديثات لهذا الإصدار بعد.\n\nسيبدأ التحديث التلقائي للمكونات بمجرد نشر مستودع إصدارات OpenPlayer.",
+ "This version of OpenPlayer is no longer supported": "هذا الإصدار من OpenPlayer لم يعد مدعومًا",
  "This window needs Microsoft Edge WebView2, which is not installed.": "تحتاج هذه النافذة إلى Microsoft Edge WebView2، وهو غير مثبت.",
  "Tools": "أدوات",
  "Track": "مسار",

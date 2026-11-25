@@ -5,7 +5,8 @@ package main
 // Arabic is written in Egyptian colloquial, like the website.
 const (
 	whatsNewDate = "2026-11-25"
-	whatsNewEN   = `Found a problem? Help › Report a Bug sends it straight to the developer (no account needed)
+	whatsNewEN   = `Automatic codec updates: OpenPlayer now keeps its playback engine and codecs up to date by itself, with tested and signed updates
+Found a problem? Help › Report a Bug sends it straight to the developer (no account needed)
 OpenPlayer remembers your volume: turn it down once and every next video (and the next time you open the app) plays at the same volume
 Fixed: some videos (with 32 kHz or 16 kHz sound, like many phone and WhatsApp videos) played with no voice when the equalizer was on — including videos you had opened before
 Clicking the video now pauses and plays instantly
@@ -18,7 +19,8 @@ Click the video once to pause, click again to play
 Double-click the video to go full screen, double-click again to leave full screen
 In full screen the controls hide by themselves after 3 seconds when paused
 Help menu: What's New, Check for Updates, website and email support`
-	whatsNewAR = `لقيت مشكلة؟ من المساعدة › الإبلاغ عن مشكلة، البلاغ يوصل للمطوّر على طول (من غير ما تعمل حساب)
+	whatsNewAR = `تحديث الكوديك أوتوماتيك: البرنامج بقى بيحدّث محرك التشغيل والكوديكات لوحده، بتحديثات متجرّبة وموقّعة
+لقيت مشكلة؟ من المساعدة › الإبلاغ عن مشكلة، البلاغ يوصل للمطوّر على طول (من غير ما تعمل حساب)
 بقى OpenPlayer بيفتكر مستوى الصوت: وطّيه مرة وكل الفيديوهات اللي بعده (والمرة الجاية اللي تفتح فيها البرنامج) هتشتغل على نفس الصوت
 اتصلّحت مشكلة إن بعض الفيديوهات (زي فيديوهات الموبايل والواتساب) كانت بتشتغل من غير صوت لما الإكولايزر يكون شغّال، حتى الفيديوهات اللي اتفتحت قبل كده
 الدوسة على الفيديو بقت بتوقف وتشغّل فورًا

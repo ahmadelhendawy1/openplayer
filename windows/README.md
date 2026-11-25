@@ -9,6 +9,7 @@ Go program with a WebView2 interface on top of libmpv. The on-screen controls ar
 | `cmd/openplayer-setup` | the installer (the payload is created by the build script) |
 | `cmd/enginectl`, `internal/` | signed engine-pack updater (see `ENGINE-UPDATER.md`) |
 | `config/` | key bindings, uosc settings, Arabic uosc text, shaders |
+| `engine/` | automatic codec updates: robot settings, public key, test clips (see `engine/README.md`) |
 | `third_party/uosc-patches/` | OpenPlayer's small changes to uosc, applied by the build script |
 | `third_party/` | vendored Go dependencies, so builds work offline |
 

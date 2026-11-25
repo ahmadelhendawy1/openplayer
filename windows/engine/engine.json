@@ -1,0 +1,11 @@
+{
+  "_comment": "Settings for OpenPlayer's automatic engine (codec) updates. See engine/README.md.",
+  "libmpv_repo": "zhongfly/mpv-winbuild",
+  "libmpv_asset": "^mpv-dev-lgpl-x86_64-(\\d{8})-git-([0-9a-f]+)\\.7z$",
+  "uosc_repo": "tomasklaen/uosc",
+  "uosc_commit": "074b0869c7d758306d7b29d13f59801b73caaee2",
+  "uosc_rev": 0,
+  "release_tag": "engine",
+  "bundled_date": "20261104",
+  "bundled_git": "ff8ca979b0"
+}
